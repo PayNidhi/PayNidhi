@@ -280,18 +280,23 @@ export const loginLender = async (req, res) => {
 // ==========================================
 
 export const getMe = async (req, res) => {
-  if (!req.user) return res.status(401).json({ error: "Not authenticated" });
+  try {
+    if (!req.user) return res.status(401).json({ error: "Not authenticated" });
 
-  res.json({
-    _id: req.user._id,
-    email: req.user.email,
-    companyName: req.user.companyName,
-    role: req.user.businessType ? "seller" : "lender",
-    avatarUrl: req.user.avatarUrl || "",
-    isOnboarded: req.user.isOnboarded,
-    kycStatus: req.user.kycStatus,
-    trustScore: user.trustScore || 300,
-  });
+    res.json({
+      _id: req.user._id,
+      email: req.user.email,
+      companyName: req.user.companyName,
+      role: req.user.businessType ? "seller" : "lender",
+      avatarUrl: req.user.avatarUrl || "",
+      isOnboarded: req.user.isOnboarded,
+      kycStatus: req.user.kycStatus,
+      trustScore: req.user.trustScore || 300, // ✅ FIXED: Changed 'user' to 'req.user'
+    });
+  } catch (error) {
+    console.error("GetMe Error:", error);
+    res.status(500).json({ error: "Server error fetching user" });
+  }
 };
 
 export const updateProfile = async (req, res) => {
