@@ -45,12 +45,23 @@ export const registerSeller = async (req, res) => {
 
     console.log("Verifying company gstin...");
     const verifiedCompany = await MockCompany.findOne({ gstin: gstNumber });
-    
+
     if (!verifiedCompany) {
-      return res.status(400).json({ error: "Registration Failed: GSTIN not found in official Govt records." });
+      return res
+        .status(400)
+        .json({
+          error:
+            "Registration Failed: GSTIN not found in official Govt records.",
+        });
     }
-    if (verifiedCompany.companyName.toLowerCase() !== companyName.toLowerCase()) {
-      return res.status(400).json({ error: `Registration Failed: GSTIN belongs to '${verifiedCompany.companyName}', not '${companyName}'.` });
+    if (
+      verifiedCompany.companyName.toLowerCase() !== companyName.toLowerCase()
+    ) {
+      return res
+        .status(400)
+        .json({
+          error: `Registration Failed: GSTIN belongs to '${verifiedCompany.companyName}', not '${companyName}'.`,
+        });
     }
 
     console.log("GST company verification done!");
@@ -96,7 +107,7 @@ export const registerSeller = async (req, res) => {
         kycStatus: seller.kycStatus,
         message: "Seller registered successfully. Complete KYC to get started.",
       });
-    } 
+    }
   } catch (error) {
     console.error("Registration Error:", error);
     res.status(500).json({ error: error.message });
@@ -152,42 +163,68 @@ export const registerLender = async (req, res) => {
     // 🛡️ WALL 3: RBI REGULATORY SHIELD
     if (["Bank", "NBFC", "Institutional"].includes(lenderType)) {
       if (!lenderLicense || !gstNumber) {
-        return res.status(400).json({ error: "Corporate lenders must provide a GSTIN and an RBI License Number." });
+        return res
+          .status(400)
+          .json({
+            error:
+              "Corporate lenders must provide a GSTIN and an RBI License Number.",
+          });
       }
 
       console.log(`🔍 Verifying RBI License for: ${lenderLicense}`);
-      const rbiRecord = await MockRBIDatabase.findOne({ licenseNumber: lenderLicense });
+      const rbiRecord = await MockRBIDatabase.findOne({
+        licenseNumber: lenderLicense,
+      });
 
-      if (!rbiRecord) return res.status(400).json({ error: "Verification Failed: RBI License Number not found." });
-      if (rbiRecord.status !== "Active") return res.status(403).json({ error: `Regulatory Alert: License '${rbiRecord.status}'. Blocked.` });
-      if (rbiRecord.gstin.toLowerCase() !== gstNumber.toLowerCase()) return res.status(400).json({ error: "Verification Failed: GSTIN mismatch." });
-      
+      if (!rbiRecord)
+        return res
+          .status(400)
+          .json({
+            error: "Verification Failed: RBI License Number not found.",
+          });
+      if (rbiRecord.status !== "Active")
+        return res
+          .status(403)
+          .json({
+            error: `Regulatory Alert: License '${rbiRecord.status}'. Blocked.`,
+          });
+      if (rbiRecord.gstin.toLowerCase() !== gstNumber.toLowerCase())
+        return res
+          .status(400)
+          .json({ error: "Verification Failed: GSTIN mismatch." });
+
       console.log("✅ RBI Verification Passed!");
     }
 
     const lenderExists = await Lender.findOne({ email });
-    if (lenderExists) return res.status(400).json({ error: "Email already registered as Lender" });
+    if (lenderExists)
+      return res
+        .status(400)
+        .json({ error: "Email already registered as Lender" });
 
     let gstHash = null;
     if (gstNumber) {
       gstHash = hashField(gstNumber);
       const isGstNumDuplicate = await Lender.findOne({ gstHash });
-      if (isGstNumDuplicate) return res.status(400).json({ error: "GST Number already registered to another Lender" });
+      if (isGstNumDuplicate)
+        return res
+          .status(400)
+          .json({ error: "GST Number already registered to another Lender" });
     }
 
     const lender = await Lender.create({
       email,
       password,
       companyName,
-      gstNumber, 
-      gstHash,   
+      gstNumber,
+      gstHash,
       lenderType,
       lenderLicense,
       isOnboarded: false,
       kycStatus: "partial",
       totalCreditLimit: 0,
       utilizedLimit: 0,
-      walletBalance: 0, 
+      walletBalance: 0,
     });
 
     if (lender) {
@@ -202,7 +239,8 @@ export const registerLender = async (req, res) => {
         avatarUrl: lender.avatarUrl || "",
         isOnboarded: lender.isOnboarded,
         kycStatus: lender.kycStatus,
-        message: "Lender registered successfully. Complete KYC to start investing.",
+        message:
+          "Lender registered successfully. Complete KYC to start investing.",
       });
     }
   } catch (error) {
@@ -252,6 +290,7 @@ export const getMe = async (req, res) => {
     avatarUrl: req.user.avatarUrl || "",
     isOnboarded: req.user.isOnboarded,
     kycStatus: req.user.kycStatus,
+    trustScore: user.trustScore || 300,
   });
 };
 
@@ -260,7 +299,7 @@ export const updateProfile = async (req, res) => {
     if (!req.user) return res.status(401).json({ error: "Not authenticated" });
 
     const { companyName, email, annualTurnover, password } = req.body;
-    
+
     let updateData = {
       companyName,
       email,
@@ -273,12 +312,16 @@ export const updateProfile = async (req, res) => {
     }
 
     let updatedUser;
-    
+
     // 👈 FIX: Strictly check businessType to avoid confusing corporate Lenders with Sellers
-    if (req.user.businessType) { 
-      updatedUser = await Seller.findByIdAndUpdate(req.user._id, updateData, { new: true }).select("-password");
+    if (req.user.businessType) {
+      updatedUser = await Seller.findByIdAndUpdate(req.user._id, updateData, {
+        new: true,
+      }).select("-password");
     } else {
-      updatedUser = await Lender.findByIdAndUpdate(req.user._id, updateData, { new: true }).select("-password");
+      updatedUser = await Lender.findByIdAndUpdate(req.user._id, updateData, {
+        new: true,
+      }).select("-password");
     }
 
     if (!updatedUser) return res.status(404).json({ error: "User not found" });
@@ -303,17 +346,26 @@ export const updateAvatar = async (req, res) => {
   try {
     if (!req.user) return res.status(401).json({ error: "Not authenticated" });
 
-    const avatarFile = req.file; 
-    
-    if (!avatarFile) return res.status(400).json({ error: "No image file provided" });
+    const avatarFile = req.file;
+
+    if (!avatarFile)
+      return res.status(400).json({ error: "No image file provided" });
 
     const newAvatarUrl = `/uploads/avatars/${avatarFile.filename}`;
     let updatedUser;
 
     if (req.user.businessType) {
-      updatedUser = await Seller.findByIdAndUpdate(req.user._id, { avatarUrl: newAvatarUrl }, { new: true }).select("-password");
+      updatedUser = await Seller.findByIdAndUpdate(
+        req.user._id,
+        { avatarUrl: newAvatarUrl },
+        { new: true },
+      ).select("-password");
     } else {
-      updatedUser = await Lender.findByIdAndUpdate(req.user._id, { avatarUrl: newAvatarUrl }, { new: true }).select("-password");
+      updatedUser = await Lender.findByIdAndUpdate(
+        req.user._id,
+        { avatarUrl: newAvatarUrl },
+        { new: true },
+      ).select("-password");
     }
 
     res.json({
@@ -333,12 +385,14 @@ export const updateAvatar = async (req, res) => {
 // OTP LOGIC
 // ==========================================
 
-const generateOtpCode = () => Math.floor(100000 + Math.random() * 900000).toString();
+const generateOtpCode = () =>
+  Math.floor(100000 + Math.random() * 900000).toString();
 
 export const requestOtp = async (req, res) => {
   try {
     const { email, purpose } = req.body;
-    if (!email || !purpose) return res.status(400).json({ error: "Email and purpose are required" });
+    if (!email || !purpose)
+      return res.status(400).json({ error: "Email and purpose are required" });
 
     const code = generateOtpCode();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
@@ -358,7 +412,7 @@ export const requestOtp = async (req, res) => {
 export const verifyOtp = async (req, res) => {
   try {
     const { email, code, purpose, mode } = req.body;
-    
+
     // Parse the payload if it exists
     let payload = null;
     if (req.body.payload) {
@@ -369,11 +423,13 @@ export const verifyOtp = async (req, res) => {
         return res.status(400).json({ error: "Invalid payload format" });
       }
     }
-    
+
     const avatarFile = req.file;
 
     if (!email || !code || !purpose || !mode) {
-      return res.status(400).json({ error: "Missing required verification fields" });
+      return res
+        .status(400)
+        .json({ error: "Missing required verification fields" });
     }
 
     const otpDoc = await Otp.findOne({ email, code, purpose, verified: false });
@@ -392,22 +448,40 @@ export const verifyOtp = async (req, res) => {
     let avatarUrl = "";
 
     if (purpose === "register") {
-      avatarUrl = avatarFile ? `/uploads/avatars/${avatarFile.filename}` : getRandomAvatarUrl();
+      avatarUrl = avatarFile
+        ? `/uploads/avatars/${avatarFile.filename}`
+        : getRandomAvatarUrl();
 
       if (mode === "seller") {
-        const { email: payloadEmail, password, companyName, gstNumber, businessType, industry, annualTurnover } = payload || {};
+        const {
+          email: payloadEmail,
+          password,
+          companyName,
+          gstNumber,
+          businessType,
+          industry,
+          annualTurnover,
+        } = payload || {};
         const finalEmail = payloadEmail || email;
 
         if (!finalEmail || !password || !companyName || !gstNumber) {
-          return res.status(400).json({ error: "Missing registration fields for seller" });
+          return res
+            .status(400)
+            .json({ error: "Missing registration fields for seller" });
         }
 
         const gstHash = hashField(gstNumber);
         const sellerExists = await Seller.findOne({ email: finalEmail });
-        if (sellerExists) return res.status(400).json({ error: "Email already registered as seller" });
+        if (sellerExists)
+          return res
+            .status(400)
+            .json({ error: "Email already registered as seller" });
 
         const isGstNumDuplicate = await Seller.findOne({ gstHash });
-        if (isGstNumDuplicate) return res.status(400).json({ error: "GST Number already registered" });
+        if (isGstNumDuplicate)
+          return res
+            .status(400)
+            .json({ error: "GST Number already registered" });
 
         user = await Seller.create({
           email: finalEmail,
@@ -418,38 +492,63 @@ export const verifyOtp = async (req, res) => {
           businessType: businessType || "Services",
           industry: industry || "IT",
           annualTurnover: Number(annualTurnover) || 0,
-          isOnboarded: false,   
-          kycStatus: "partial", 
+          isOnboarded: false,
+          kycStatus: "partial",
           avatarUrl,
         });
-
       } else if (mode === "lender") {
         // LENDER REGISTRATION
-        const { email: payloadEmail, password, companyName, lenderType, lenderLicense, gstNumber } = payload || {};
+        const {
+          email: payloadEmail,
+          password,
+          companyName,
+          lenderType,
+          lenderLicense,
+          gstNumber,
+        } = payload || {};
         const finalEmail = payloadEmail || email;
 
         console.log("Lender Registration Payload received:", payload);
 
         if (!finalEmail || !password || !companyName || !lenderType) {
-          return res.status(400).json({ error: "Missing required fields for Lender registration." });
+          return res
+            .status(400)
+            .json({
+              error: "Missing required fields for Lender registration.",
+            });
         }
 
         // Bypassing strict RBI check for local development
         if (["Bank", "NBFC", "Institutional"].includes(lenderType)) {
           if (!lenderLicense || !gstNumber) {
-            return res.status(400).json({ error: "Corporate lenders must provide a GSTIN and an RBI License Number." });
+            return res
+              .status(400)
+              .json({
+                error:
+                  "Corporate lenders must provide a GSTIN and an RBI License Number.",
+              });
           }
-          console.log(`✅ [DEV MODE]: Bypassing strict MockDB check for RBI License: ${lenderLicense}`);
+          console.log(
+            `✅ [DEV MODE]: Bypassing strict MockDB check for RBI License: ${lenderLicense}`,
+          );
         }
 
         const lenderExists = await Lender.findOne({ email: finalEmail });
-        if (lenderExists) return res.status(400).json({ error: "Email already registered as lender" });
+        if (lenderExists)
+          return res
+            .status(400)
+            .json({ error: "Email already registered as lender" });
 
         let gstHash = null;
         if (gstNumber) {
           gstHash = hashField(gstNumber);
           const isGstNumDuplicate = await Lender.findOne({ gstHash });
-          if (isGstNumDuplicate) return res.status(400).json({ error: "GST Number already registered to another Lender" });
+          if (isGstNumDuplicate)
+            return res
+              .status(400)
+              .json({
+                error: "GST Number already registered to another Lender",
+              });
         }
 
         try {
@@ -457,30 +556,36 @@ export const verifyOtp = async (req, res) => {
             email: finalEmail,
             password,
             companyName,
-            gstNumber: gstNumber || undefined, 
-            gstHash: gstHash || undefined,   
+            gstNumber: gstNumber || undefined,
+            gstHash: gstHash || undefined,
             lenderType,
             lenderLicense: lenderLicense || undefined,
             isOnboarded: false,
             kycStatus: "partial",
             totalCreditLimit: 0,
             utilizedLimit: 0,
-            walletBalance: 0, 
+            walletBalance: 0,
             avatarUrl,
           });
         } catch (dbError) {
-           console.error("Database Error during Lender creation:", dbError);
-           // Handle specific mongoose validation errors
-           return res.status(400).json({ error: "Database validation failed. Please check your inputs." });
+          console.error("Database Error during Lender creation:", dbError);
+          // Handle specific mongoose validation errors
+          return res
+            .status(400)
+            .json({
+              error: "Database validation failed. Please check your inputs.",
+            });
         }
       }
     } else if (purpose === "login") {
       if (mode === "seller") {
         user = await Seller.findOne({ email });
-        if (!user) return res.status(400).json({ error: "Seller account not found" });
+        if (!user)
+          return res.status(400).json({ error: "Seller account not found" });
       } else {
         user = await Lender.findOne({ email });
-        if (!user) return res.status(400).json({ error: "Lender account not found" });
+        if (!user)
+          return res.status(400).json({ error: "Lender account not found" });
       }
 
       if (!user.avatarUrl) {
@@ -500,10 +605,13 @@ export const verifyOtp = async (req, res) => {
       avatarUrl: user.avatarUrl || "",
       isOnboarded: user.isOnboarded,
       kycStatus: user.kycStatus,
-      message: purpose === "register" ? "Registration complete." : "Login verified",
+      message:
+        purpose === "register" ? "Registration complete." : "Login verified",
     });
   } catch (error) {
     console.error("Verify OTP error:", error);
-    res.status(500).json({ error: "An unexpected error occurred during OTP verification." });
+    res
+      .status(500)
+      .json({ error: "An unexpected error occurred during OTP verification." });
   }
 };

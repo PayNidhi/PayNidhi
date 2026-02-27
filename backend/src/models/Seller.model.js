@@ -1,15 +1,24 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
-import { encryptField, decryptField, hashField } from "../utils/encryption.utils.js";
+import {
+  encryptField,
+  decryptField,
+  hashField,
+} from "../utils/encryption.utils.js";
 
 const bankAccountSchema = new mongoose.Schema({
   accountNumber: { type: String, required: true, sparse: true, unique: true },
-  accountNumberHash: { type: String, required: false, sparse: true, unique: true },
+  accountNumberHash: {
+    type: String,
+    required: false,
+    sparse: true,
+    unique: true,
+  },
   ifscCode: { type: String, required: true, sparse: true, uppercase: true },
   beneficiaryName: { type: String, sparse: true, required: true },
   bankName: { type: String, sparse: true, required: true },
   // verified: { type: Boolean, default: false }
-})
+});
 
 const sellerSchema = new mongoose.Schema(
   {
@@ -44,14 +53,38 @@ const sellerSchema = new mongoose.Schema(
 
     // 3. SENSITIVE KYC DATA (Encrypted + Blind Index)
     panNumber: { type: String, unique: true, sparse: true, required: false },
-    gstNumber: { type: String, unique: true, sparse: true, required: true, index: true },
-    panHash: { type: String, required: false, unique: true, sparse: true, index: true },
-    gstHash: { type: String, required: true, unique: true, sparse: true, index: true },
-    aadhaarNumber: { type: Number, unique: true, sparse: true, required: false, index: true },
+    gstNumber: {
+      type: String,
+      unique: true,
+      sparse: true,
+      required: true,
+      index: true,
+    },
+    panHash: {
+      type: String,
+      required: false,
+      unique: true,
+      sparse: true,
+      index: true,
+    },
+    gstHash: {
+      type: String,
+      required: true,
+      unique: true,
+      sparse: true,
+      index: true,
+    },
+    aadhaarNumber: {
+      type: Number,
+      unique: true,
+      sparse: true,
+      required: false,
+      index: true,
+    },
 
     // 4. BANK DETAILS (Completed during KYC - partial at registration)
     bankAccount: {
-      type: [bankAccountSchema]
+      type: [bankAccountSchema],
     },
 
     // 5. SYSTEM & FINANCIALS
@@ -59,9 +92,12 @@ const sellerSchema = new mongoose.Schema(
     kycStatus: {
       type: String,
       enum: ["pending", "partial", "verified", "rejected"],
-      default: "partial" // partial after registration
+      default: "partial", // partial after registration
     },
-    trustScore: { type: Number, default: 0 },
+    trustScore: { type: Number, default: 300 },
+    totalInvoicesFunded: { type: Number, default: 0 },
+    totalInvoicesRepaid: { type: Number, default: 0 },
+    defaultedInvoices: { type: Number, default: 0 },
 
     walletBalance: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
@@ -75,7 +111,7 @@ const sellerSchema = new mongoose.Schema(
     // 6. PROFILE
     avatarUrl: { type: String, default: "" },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // HASH + ENCRYPT (only if fields exist)
@@ -101,8 +137,13 @@ sellerSchema.pre("save", async function () {
   }
 
   // Bank fields (only if they exist)
-  if (seller.isModified("bankAccount.accountNumber") && seller.bankAccount?.accountNumber) {
-    seller.bankAccount.accountNumber = encryptField(seller.bankAccount.accountNumber);
+  if (
+    seller.isModified("bankAccount.accountNumber") &&
+    seller.bankAccount?.accountNumber
+  ) {
+    seller.bankAccount.accountNumber = encryptField(
+      seller.bankAccount.accountNumber,
+    );
   }
   if (seller.isModified("bankAccount.ifscCode")) {
     seller.bankAccount.ifscCode = encryptField(seller.bankAccount.ifscCode);
@@ -142,17 +183,19 @@ sellerSchema.pre("save", async function () {
 
   // BANK DETAILS Encryption (Mapping through the array)
   if (seller.isModified("bankAccount")) {
-    seller.bankAccount = seller.bankAccount.map(acc => {
+    seller.bankAccount = seller.bankAccount.map((acc) => {
       // Only encrypt if it's not already encrypted (contains ":")
       return {
         ...acc,
-        accountNumberHash: acc.accountNumber.includes(":") ? accountNumberHash : hashField(acc.accountNumber),
-        accountNumber: acc.accountNumber.includes(":") ? acc.accountNumber : encryptField(acc.accountNumber),
-        ifscCode: acc.ifscCode ? acc.ifscCode : encryptField(acc.ifscCode)
+        accountNumberHash: acc.accountNumber.includes(":")
+          ? accountNumberHash
+          : hashField(acc.accountNumber),
+        accountNumber: acc.accountNumber.includes(":")
+          ? acc.accountNumber
+          : encryptField(acc.accountNumber),
+        ifscCode: acc.ifscCode ? acc.ifscCode : encryptField(acc.ifscCode),
       };
     });
   }
-
-
 });
 export default mongoose.model("Seller", sellerSchema);
