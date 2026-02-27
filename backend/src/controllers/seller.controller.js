@@ -10,6 +10,7 @@ import multer from 'multer'
 // ==========================================
 export const dashboardSummary = async (req, res) => {
   try {
+    console.log("loadig dashboard summary...")
     const sellerId = req.user._id;
 
     // Real stats from DB

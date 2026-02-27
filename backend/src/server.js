@@ -10,7 +10,7 @@ import connectDB from "./lib/db.js";
 
 // Routes
 import authRoutes from "./routes/auth.routes.js";
-
+import invoiceR
 
 
 // ES module __dirname fix
@@ -37,7 +37,7 @@ app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 // API routes
 app.use("/api/auth", authRoutes);
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
-
+app.use("/api/seller", sellerRoutes)
 
 const PORT = process.env.PORT || 5001;
 

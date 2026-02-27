@@ -12,7 +12,12 @@ import RegisterPage from "./pages/auth/RegisterPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import OtpVerifyCard from "./components/auth/OtpVerifyCard";
 
-
+import SellerDashboard from "./pages/seller/SellerDashboard";
+import SellerOnboarding from "./pages/seller/SellerOnboarding";
+import UploadInvoice from "./pages/seller/UploadInvoice";
+import SellerSettings from "./pages/seller/SellerSettings";
+import KycPage from "./pages/seller/KycPage";
+import SellerInvoices from "./pages/seller/SellerInvoices";
 
 
 function App() {
@@ -31,6 +36,16 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         
+        {/* Seller protected area */}
+        <Route element={<ProtectedRoute allowedRoles={["seller"]} />}>
+          <Route path="/seller/onboarding" element={<SellerOnboarding />} />
+          <Route path="/seller/dashboard" element={<SellerDashboard />} />
+          <Route path="/seller/kyc" element={<KycPage />} />
+          <Route path="/seller/invoices" element={<UploadInvoice />} />
+          <Route path="/seller/settings" element={<SellerSettings />} />
+          <Route path="/seller/invoice" element={<SellerInvoices />} />
+        </Route>
+
       </Routes>
     </>
   );
