@@ -12,7 +12,8 @@ import {
   getInvoiceWithBids,
   completeKyc,
   dashboardSummary ,
-  requestWithdrawal  // ✅ ADDED THIS
+  requestWithdrawal,
+  getSellerWalletData  // ✅ ADDED THIS
 } from "../controllers/seller.controller.js";
 
 // Middleware
@@ -39,6 +40,8 @@ router.post("/bid-response/:bidId", protect, authorize("seller"), respondToBid);
 
 // route : post : /api/seller/kyc-verification
 router.post("/kyc-verification", protect, authorize("seller"), kycVerification);
+
+router.get("/wallet-data", protect, authorize("seller"), getSellerWalletData);
 
 router.post("/withdraw", protect, authorize("seller"), requestWithdrawal);
 

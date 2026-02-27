@@ -5,6 +5,7 @@ import Lender from "../models/Lender.model.js";
 import { hashField } from "../utils/encryption.utils.js";
 import Transaction from "../models/Transaction.model.js";
 import multer from 'multer'
+import SellerModel from "../models/Seller.model.js";
 // ==========================================
 // 1. DASHBOARD SUMMARY (NEW - WAS MISSING) ✅
 // ==========================================
@@ -232,6 +233,25 @@ export const completeKyc = async (req, res) => {
     res.status(500).json({ error: "Failed to complete KYC" });
   }
 };
+
+export const getSellerWalletData = async (req, res) => {
+  try {
+    const sellerId = req.user._id;
+    const seller = await SellerModel.findById(sellerId);
+
+    if (!seller) return res.status(404).json({ error: "Seller not found"});
+
+    return res.status(200).json({
+      success: true,
+      walletBalance: seller.walletBalance
+    })
+
+  } catch (error) {
+    console.error("Withdrawal Error:", error);
+    return res.status(500).json({ error: "Failed to process withdrawal request." }); 
+  }
+}
+
 export const requestWithdrawal = async (req, res) => {
   try {
     const { amount } = req.body;

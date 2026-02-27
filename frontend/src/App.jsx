@@ -18,6 +18,7 @@ import UploadInvoice from "./pages/seller/UploadInvoice";
 import SellerSettings from "./pages/seller/SellerSettings";
 import KycPage from "./pages/seller/KycPage";
 import SellerInvoices from "./pages/seller/SellerInvoices";
+import SellerWallet from "./pages/seller/SellerWallet";
 
 // ✅ Import your new Lender pages
 import LenderDashboard from "./pages/lender/LenderDashboard";
@@ -64,6 +65,7 @@ function App() {
           <Route path="/seller/invoices" element={<UploadInvoice />} />
           <Route path="/seller/settings" element={<SellerSettings />} />
           <Route path="/seller/invoice" element={<SellerInvoices />} />
+          <Route path="/seller/wallet" element={<SellerWallet />} />
         </Route>
 
         {/* ✅ Lender protected area (Added KYC and Settings here!) */}
