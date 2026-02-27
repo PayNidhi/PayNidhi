@@ -19,6 +19,15 @@ import SellerSettings from "./pages/seller/SellerSettings";
 import KycPage from "./pages/seller/KycPage";
 import SellerInvoices from "./pages/seller/SellerInvoices";
 
+// ✅ Import your new Lender pages
+import LenderDashboard from "./pages/lender/LenderDashboard";
+import LenderOnboarding from "./pages/lender/LenderOnboarding";
+import LenderKyc from "./pages/lender/LenderKyc";
+import LenderMarketplace from "./pages/lender/LenderMarketplace";
+import LenderBidsPage from "./pages/lender/LenderBidsPage";
+import LenderWallet from "./pages/lender/LenderWallet";
+// import LenderSettings from "./pages/lender/LenderSettings";
+
 
 function App() {
   return (
@@ -44,6 +53,17 @@ function App() {
           <Route path="/seller/invoices" element={<UploadInvoice />} />
           <Route path="/seller/settings" element={<SellerSettings />} />
           <Route path="/seller/invoice" element={<SellerInvoices />} />
+        </Route>
+
+        {/* ✅ Lender protected area (Added KYC and Settings here!) */}
+        <Route element={<ProtectedRoute allowedRoles={["lender"]} />}>
+          <Route path="/lender/onboarding" element={<LenderOnboarding />} />
+          <Route path="/lender/dashboard" element={<LenderDashboard />} />
+          <Route path="/lender/kyc" element={<LenderKyc />} />
+          <Route path="/lender/marketplace" element={<LenderMarketplace />} />
+          <Route path="/lender/bids" element={<LenderBidsPage />} />
+          <Route path="/lender/wallet" element={<LenderWallet />} />
+          {/* <Route path="/lender/settings" element={<LenderSettings />} /> */}
         </Route>
 
       </Routes>
