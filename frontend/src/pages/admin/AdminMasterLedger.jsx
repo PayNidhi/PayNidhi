@@ -87,7 +87,7 @@ const AdminMasterLedger = () => {
                             onClick={async () => {
                                 const tId = toast.loading('Processing Repayment...');
                                 try {
-                                    await adminApi.post(`/invoice/${row._id}/settle`);
+                                    await adminApi.post(`/${row._id}/process-repayment`);
                                     toast.success('Repayment Processed Successfully', { id: tId });
                                     fetchData();
                                 } catch (error) {

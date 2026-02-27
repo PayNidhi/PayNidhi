@@ -183,6 +183,9 @@ export const respondToBid = async (req, res) => {
 // ==========================================
 // 5. COMPLETE KYC (EXISTING - FIXED) ✅
 // ==========================================
+// Add this import at the very top of your file:
+// import { updateSellerTrustScore } from "../utils/creditScore.utils.js";
+
 export const completeKyc = async (req, res) => {
   try {
     if (!req.user) {
@@ -216,6 +219,9 @@ export const completeKyc = async (req, res) => {
       },
       { new: true, runValidators: true }
     ).select("-password");
+
+    // 👇 ADDED THIS SINGLE LINE to calculate the score now that KYC is verified
+    await updateSellerTrustScore(updatedSeller._id);
 
     res.json({
       success: true,

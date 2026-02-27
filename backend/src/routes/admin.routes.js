@@ -10,11 +10,11 @@ import {
   getAllLenders,
   getPendingNOAInvoices,
   verifyNOA,
-  processBuyerRepayment,
   toggleUserStatus,
   getAllTransactionsAdmin,
   getAllFinancesAdmin,
-  getAllInvoicesAdmin
+  getAllInvoicesAdmin,
+  processBuyerRepayment
 } from "../controllers/admin.controller.js";
 
 const router = express.Router();
@@ -62,10 +62,11 @@ router.get("/sellers", getAllSellers);
 router.get("/lenders", getAllLenders);
 router.get("/invoices/pending-noa", getPendingNOAInvoices);
 router.patch("/invoice/:id/verify-noa", verifyNOA);
-router.post("/invoice/:id/settle", processBuyerRepayment);
+// router.post("/invoice/:id/settle", processBuyerRepayment);
 router.patch("/user/:role/:id/toggle", toggleUserStatus);
 router.get("/transactions", getAllTransactionsAdmin);
 router.get("/finances", getAllFinancesAdmin);
 router.get("/ledger", getAllInvoicesAdmin);
+router.post("/:id/process-repayment", processBuyerRepayment);
 
 export default router;
