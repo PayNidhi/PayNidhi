@@ -106,7 +106,7 @@ export const getInvoiceWithBids = async (req, res) => {
     const sellerId = req.user._id;
 
     const invoice = await Invoice.findOne({ _id: invoiceId, seller: sellerId }).lean();
-    
+
     if (!invoice) {
       return res.status(404).json({ error: "Invoice not found or unauthorized" });
     }
@@ -151,13 +151,13 @@ export const respondToBid = async (req, res) => {
 
     // 2. If Seller ACCEPTS the bid
     if (status === "Accepted") {
-      bid.status = "Accepted"; 
+      bid.status = "Accepted";
       await bid.save();
 
       // 🔥 FIX: Move the invoice to the NOA Waiting Phase (NOT "Financed")
-      await Invoice.findByIdAndUpdate(bid.invoice._id, { 
-        status: "Pending_NOA", 
-        lender: bid.lender 
+      await Invoice.findByIdAndUpdate(bid.invoice._id, {
+        status: "Pending_NOA",
+        lender: bid.lender
       });
 
       // Reject all other pending bids on this invoice
@@ -245,16 +245,22 @@ export const getSellerWalletData = async (req, res) => {
     const sellerId = req.user._id;
     const seller = await SellerModel.findById(sellerId);
 
-    if (!seller) return res.status(404).json({ error: "Seller not found"});
+    if (!seller) return res.status(404).json({ error: "Seller not found" });
+
+    // Fetch transactions to build history
+    const transactions = await Transaction.find({ seller: sellerId })
+      .sort({ createdAt: -1 })
+      .limit(50); // Fetch last 50 transactions
 
     return res.status(200).json({
       success: true,
-      walletBalance: seller.walletBalance
+      walletBalance: seller.walletBalance,
+      transactions: transactions || []
     })
 
   } catch (error) {
-    console.error("Withdrawal Error:", error);
-    return res.status(500).json({ error: "Failed to process withdrawal request." }); 
+    console.error("Wallet Data Fetch Error:", error);
+    return res.status(500).json({ error: "Failed to fetch wallet data." });
   }
 }
 
@@ -272,9 +278,9 @@ export const requestWithdrawal = async (req, res) => {
     if (!seller) return res.status(404).json({ error: "Seller not found." });
 
     if (amount > seller.walletBalance) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: "Insufficient wallet balance.",
-        availableBalance: seller.walletBalance 
+        availableBalance: seller.walletBalance
       });
     }
 
@@ -289,9 +295,9 @@ export const requestWithdrawal = async (req, res) => {
       amount: amount,
       fee: 0, // You could charge a flat ₹10 IMPS fee here if you wanted!
       type: "WITHDRAWAL",
-      status: "PENDING", // Admin will change this to SUCCESS once money is actually wired
+      status: "SUCCESS", // Changed to SUCCESS for instant demo experience
       referenceId: `WD-${Date.now()}`,
-      description: `Withdrawal request to registered bank account`
+      description: `Withdrawal to primary bank account`
     });
 
     res.status(200).json({
@@ -328,7 +334,7 @@ export const uploadNOADocument = async (req, res) => {
 
     // Save the document and notify Admin
     invoice.noaDocumentUrl = noaDocumentUrl;
-    invoice.status = "Pending Admin Approval"; 
+    invoice.status = "Pending Admin Approval";
     await invoice.save();
 
     res.status(200).json({

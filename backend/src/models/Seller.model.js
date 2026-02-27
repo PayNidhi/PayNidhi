@@ -114,43 +114,46 @@ const sellerSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// HASH + ENCRYPT (only if fields exist)
+// HASH + ENCRYPT (Universal Hook)
 sellerSchema.pre("save", async function () {
   const seller = this;
 
-  // password
+  // 1. Password
   if (seller.isModified("password")) {
     const salt = await bcrypt.genSalt(10);
     seller.password = await bcrypt.hash(seller.password, salt);
   }
 
-  // GST (required)
-  if (seller.isModified("gstNumber") && seller.gstNumber) {
+  // 2. GST (Protect against recursive encryption)
+  if (seller.isModified("gstNumber") && seller.gstNumber && !seller.gstNumber.includes(":")) {
     seller.gstHash = hashField(seller.gstNumber);
     seller.gstNumber = encryptField(seller.gstNumber);
   }
 
-  // PAN (optional - KYC)
-  if (seller.isModified("panNumber") && seller.panNumber) {
-    seller.panNumber = encryptField(seller.panNumber);
+  // 3. PAN (Protect against recursive encryption)
+  if (seller.isModified("panNumber") && seller.panNumber && !seller.panNumber.includes(":")) {
     seller.panHash = hashField(seller.panNumber);
+    seller.panNumber = encryptField(seller.panNumber);
   }
 
-  // Bank fields (only if they exist)
-  if (
-    seller.isModified("bankAccount.accountNumber") &&
-    seller.bankAccount?.accountNumber
-  ) {
-    seller.bankAccount.accountNumber = encryptField(
-      seller.bankAccount.accountNumber,
-    );
-  }
-  if (seller.isModified("bankAccount.ifscCode")) {
-    seller.bankAccount.ifscCode = encryptField(seller.bankAccount.ifscCode);
+  // 4. Bank Details (Protect against recursive encryption in array)
+  if (seller.isModified("bankAccount")) {
+    seller.bankAccount = seller.bankAccount.map(acc => {
+      // accountNumber
+      if (acc.accountNumber && !acc.accountNumber.includes(":")) {
+        acc.accountNumberHash = hashField(acc.accountNumber);
+        acc.accountNumber = encryptField(acc.accountNumber);
+      }
+      // ifscCode
+      if (acc.ifscCode && !acc.ifscCode.includes(":")) {
+        acc.ifscCode = encryptField(acc.ifscCode);
+      }
+      return acc;
+    });
   }
 });
 
-// DECRYPT AFTER LOAD (only if encrypted)
+// DECRYPT AFTER LOAD (Handles Arrays Correctly)
 sellerSchema.post("init", function (doc) {
   if (doc.gstNumber && doc.gstNumber.includes(":")) {
     doc.gstNumber = decryptField(doc.gstNumber);
@@ -160,42 +163,17 @@ sellerSchema.post("init", function (doc) {
     doc.panNumber = decryptField(doc.panNumber);
   }
 
-  if (doc.bankAccount?.accountNumber?.includes(":")) {
-    doc.bankAccount.accountNumber = decryptField(doc.bankAccount.accountNumber);
-  }
-  if (doc.bankAccount?.ifscCode?.includes(":")) {
-    doc.bankAccount.ifscCode = decryptField(doc.bankAccount.ifscCode);
+  if (Array.isArray(doc.bankAccount)) {
+    doc.bankAccount = doc.bankAccount.map(acc => ({
+      ...acc,
+      accountNumber: (acc.accountNumber && acc.accountNumber.includes(":")) ? decryptField(acc.accountNumber) : acc.accountNumber,
+      ifscCode: (acc.ifscCode && acc.ifscCode.includes(":")) ? decryptField(acc.ifscCode) : acc.ifscCode
+    }));
   }
 });
 
 sellerSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
-sellerSchema.pre("save", async function () {
-  const seller = this;
 
-  // ... password hashing logic ...
-
-  // PAN / GST Encryption
-  if (seller.isModified("panNumber") && seller.panNumber) {
-    seller.panNumber = encryptField(seller.panNumber);
-  }
-
-  // BANK DETAILS Encryption (Mapping through the array)
-  if (seller.isModified("bankAccount")) {
-    seller.bankAccount = seller.bankAccount.map((acc) => {
-      // Only encrypt if it's not already encrypted (contains ":")
-      return {
-        ...acc,
-        accountNumberHash: acc.accountNumber.includes(":")
-          ? accountNumberHash
-          : hashField(acc.accountNumber),
-        accountNumber: acc.accountNumber.includes(":")
-          ? acc.accountNumber
-          : encryptField(acc.accountNumber),
-        ifscCode: acc.ifscCode ? acc.ifscCode : encryptField(acc.ifscCode),
-      };
-    });
-  }
-});
 export default mongoose.model("Seller", sellerSchema);

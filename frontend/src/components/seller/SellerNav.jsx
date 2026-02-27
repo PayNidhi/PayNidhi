@@ -9,7 +9,7 @@ import {
   X,
   Lock,
   BadgeCheck,
-  Gavel 
+  Gavel
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -18,9 +18,8 @@ import toast from "react-hot-toast";
 const MENU_ITEMS = [
   { key: "overview", icon: LayoutDashboard, label: "Overview" },
   { key: "invoices", icon: Receipt, label: "Invoices" },
-  { key: "invoice", icon: Gavel, label: "Invoice Portfolio" }, 
+  { key: "invoice", icon: Gavel, label: "Invoice Portfolio" },
   { key: "wallet", icon: Wallet, label: "Wallet" }, // Changed Payments to Wallet
-  { key: "buyers", icon: Users, label: "Buyers" },
 ];
 
 const API_BASE_URL = "http://localhost:5001";
@@ -58,15 +57,15 @@ const SellerNav = ({
       closeMobile();
       return;
     }
-    
+
     if (key === "overview") {
       navigate("/seller/dashboard");
     } else if (key === "invoices") {
       navigate("/seller/invoices");
     } else if (key === "invoice") {
-      navigate("/seller/invoice"); 
+      navigate("/seller/invoice");
     } else if (key === "wallet") { // Added routing for wallet
-      navigate("/seller/wallet"); 
+      navigate("/seller/wallet");
     } else {
       onChange?.(key);
     }
@@ -92,11 +91,11 @@ const SellerNav = ({
     <>
       {/* DESKTOP SIDEBAR - Clean White Background */}
       <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-white border-r border-slate-200/80 fixed inset-y-0 left-0 z-30 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
-        
+
         {/* Highly Attractive & Professional Identity Block */}
         <div className="px-4 py-1.5 border-b border-slate-100">
           <div className="relative flex items-center gap-3 rounded-2xl bg-white border border-slate-200/60 p-1 shadow-[0_2px_12px_-4px_rgba(15,143,121,0.15)] hover:border-[#7FE0CC]/60 transition-all duration-300">
-            
+
             <div className="relative flex-shrink-0">
               {/* Subtle professional glow behind avatar */}
               <div className="absolute inset-0 rounded-full bg-[#0f8f79]/20 blur-md"></div>
@@ -113,11 +112,10 @@ const SellerNav = ({
               </p>
               <div className="flex items-center mt-1">
                 <div
-                  className={`inline-flex items-center gap-1 rounded-full px-2 py-[2px] text-[10px] font-medium border ${
-                    isKycComplete
+                  className={`inline-flex items-center gap-1 rounded-full px-2 py-[2px] text-[10px] font-medium border ${isKycComplete
                       ? "bg-emerald-50 text-emerald-700 border-emerald-100/60"
                       : "bg-amber-50 text-amber-700 border-amber-100/60"
-                  }`}
+                    }`}
                 >
                   {isKycComplete ? (
                     <>
@@ -156,8 +154,8 @@ const SellerNav = ({
             const stateClasses = isActive
               ? "bg-gradient-to-r from-[#D9FAF2] via-white to-[#D9FAF2] text-[#0f8f79] border-[#7FE0CC] shadow-sm"
               : isDisabled
-              ? "bg-amber-25/80 text-amber-400 border border-amber-100 cursor-not-allowed"
-              : "bg-transparent text-slate-600 border-transparent hover:bg-slate-50 hover:border-slate-100";
+                ? "bg-amber-25/80 text-amber-400 border border-amber-100 cursor-not-allowed"
+                : "bg-transparent text-slate-600 border-transparent hover:bg-slate-50 hover:border-slate-100";
 
             const motionClasses = isDisabled
               ? "hover:bg-amber-25/80"
@@ -172,39 +170,34 @@ const SellerNav = ({
               >
                 {!isDisabled && (
                   <span
-                    className={`absolute inset-y-2 left-0 w-[3px] rounded-full bg-gradient-to-b from-[#47C4B7] to-emerald-500 transform origin-left transition-all duration-200 ${
-                      isActive
+                    className={`absolute inset-y-2 left-0 w-[3px] rounded-full bg-gradient-to-b from-[#47C4B7] to-emerald-500 transform origin-left transition-all duration-200 ${isActive
                         ? "opacity-100 scale-y-100"
                         : "opacity-0 scale-y-0 group-hover:opacity-100 group-hover:scale-y-100"
-                    }`}
+                      }`}
                   />
                 )}
                 {!isDisabled && (
                   <span
-                    className={`absolute left-2 top-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full bg-[#47C4B7] blur-[1px] transition-opacity duration-200 ${
-                      isActive ? "opacity-80" : "opacity-0 group-hover:opacity-60"
-                    }`}
+                    className={`absolute left-2 top-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full bg-[#47C4B7] blur-[1px] transition-opacity duration-200 ${isActive ? "opacity-80" : "opacity-0 group-hover:opacity-60"
+                      }`}
                   />
                 )}
                 <span
-                  className={`flex h-7 w-7 items-center justify-center rounded-xl transition-all duration-200 ${
-                    isActive
+                  className={`flex h-7 w-7 items-center justify-center rounded-xl transition-all duration-200 ${isActive
                       ? "bg-[#C9EFE6] text-[#0f8f79] scale-105"
                       : isDisabled
-                      ? "bg-amber-50 text-amber-400"
-                      : "bg-slate-100 text-slate-500 group-hover:bg-[#DDF5F1] group-hover:text-[#0f8f79] group-hover:scale-105"
-                  }`}
+                        ? "bg-amber-50 text-amber-400"
+                        : "bg-slate-100 text-slate-500 group-hover:bg-[#DDF5F1] group-hover:text-[#0f8f79] group-hover:scale-105"
+                    }`}
                 >
                   <Icon size={16} />
                 </span>
                 <span
-                  className={`truncate ${
-                    isDisabled ? "font-normal" : "font-medium"
-                  } ${
-                    !isDisabled
+                  className={`truncate ${isDisabled ? "font-normal" : "font-medium"
+                    } ${!isDisabled
                       ? "transition-all duration-200 group-hover:translate-x-[1px] group-hover:text-slate-900"
                       : ""
-                  }`}
+                    }`}
                 >
                   {item.label}
                 </span>
@@ -269,18 +262,16 @@ const SellerNav = ({
 
       {/* MOBILE DRAWER */}
       <div
-        className={`lg:hidden fixed inset-0 z-50 transition-opacity duration-300 ${
-          isMobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-        }`}
+        className={`lg:hidden fixed inset-0 z-50 transition-opacity duration-300 ${isMobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          }`}
       >
         <div
           className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
           onClick={closeMobile}
         />
         <div
-          className={`absolute inset-y-0 left-0 w-[82%] max-w-xs bg-white shadow-2xl border-r border-slate-200 flex flex-col transform transition-transform duration-300 ease-out ${
-            isMobileOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
+          className={`absolute inset-y-0 left-0 w-[82%] max-w-xs bg-white shadow-2xl border-r border-slate-200 flex flex-col transform transition-transform duration-300 ease-out ${isMobileOpen ? "translate-x-0" : "-translate-x-full"
+            }`}
         >
           <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-slate-100">
             <div className="flex items-center gap-3">
@@ -333,31 +324,28 @@ const SellerNav = ({
                   key={item.key}
                   onClick={() => handleNavClick(item.key)}
                   disabled={isDisabled}
-                  className={`w-full flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium border transition-all duration-150 ${
-                    isActive
+                  className={`w-full flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium border transition-all duration-150 ${isActive
                       ? "bg-gradient-to-r from-[#D9FAF2] via-white to-[#D9FAF2] text-[#0f8f79] border-[#7FE0CC] shadow-sm"
                       : isDisabled
-                      ? "bg-amber-50 text-amber-400 border border-amber-200 cursor-not-allowed"
-                      : "bg-transparent text-slate-700 border-transparent hover:bg-[#F3FBF9]"
-                  }`}
+                        ? "bg-amber-50 text-amber-400 border border-amber-200 cursor-not-allowed"
+                        : "bg-transparent text-slate-700 border-transparent hover:bg-[#F3FBF9]"
+                    }`}
                 >
                   <span
-                    className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200 ${
-                      isActive
+                    className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200 ${isActive
                         ? "bg-[#C9EFE6] text-[#0f8f79] scale-105"
                         : isDisabled
-                        ? "bg-amber-100 text-amber-500"
-                        : "bg-slate-100 text-slate-600"
-                    }`}
+                          ? "bg-amber-100 text-amber-500"
+                          : "bg-slate-100 text-slate-600"
+                      }`}
                   >
                     <Icon size={18} />
                   </span>
                   <span className="flex-1 text-left truncate">{item.label}</span>
                   {!isDisabled && (
                     <span
-                      className={`text-xs transition-all duration-200 ${
-                        isActive ? "text-[#0f8f79]" : "text-slate-400"
-                      }`}
+                      className={`text-xs transition-all duration-200 ${isActive ? "text-[#0f8f79]" : "text-slate-400"
+                        }`}
                     >
                       →
                     </span>
@@ -420,20 +408,18 @@ const SellerNav = ({
               key={item.key}
               onClick={() => handleNavClick(item.key)}
               disabled={isDisabled}
-              className={`relative rounded-full flex flex-col items-center justify-center w-full h-full transition-all duration-300 ${
-                isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
-              }`}
+              className={`relative rounded-full flex flex-col items-center justify-center w-full h-full transition-all duration-300 ${isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+                }`}
             >
               {/* Animated Icon Container */}
-              <div 
-                className={`relative flex items-center justify-center w-11 h-11 rounded-[14px] transition-all duration-500 ${
-                  isActive 
-                    ? "bg-gradient-to-br from-[#0f8f79] to-emerald-400 text-white shadow-lg shadow-[#0f8f79]/30 -translate-y-[14px]" 
+              <div
+                className={`relative flex items-center justify-center w-11 h-11 rounded-[14px] transition-all duration-500 ${isActive
+                    ? "bg-gradient-to-br from-[#0f8f79] to-emerald-400 text-white shadow-lg shadow-[#0f8f79]/30 -translate-y-[14px]"
                     : "text-slate-400 bg-transparent hover:text-slate-600"
-                }`}
+                  }`}
               >
                 <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
-                
+
                 {/* Lock Badge for Disabled Items */}
                 {isDisabled && (
                   <div className="absolute -top-1 -right-1 bg-white rounded-full p-[3px] shadow-sm border border-slate-100">
@@ -443,12 +429,11 @@ const SellerNav = ({
               </div>
 
               {/* Animated Text */}
-              <span 
-                className={`absolute bottom-1.5 text-[9px] transition-all duration-500 ${
-                  isActive 
-                    ? "font-bold text-[#0f8f79] translate-y-0 opacity-100 tracking-wide" 
+              <span
+                className={`absolute bottom-1.5 text-[9px] transition-all duration-500 ${isActive
+                    ? "font-bold text-[#0f8f79] translate-y-0 opacity-100 tracking-wide"
                     : "translate-y-2 opacity-0 font-medium"
-                }`}
+                  }`}
               >
                 {item.label}
               </span>
