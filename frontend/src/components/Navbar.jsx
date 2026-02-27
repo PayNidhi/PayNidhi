@@ -1,11 +1,14 @@
+// frontend/src/components/Navbar.jsx
 import React, { useState, useEffect } from 'react';
 import { Moon, Sun, ShieldCheck, Menu, X, ChevronRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { isAuthenticated, role } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,8 +23,17 @@ const Navbar = () => {
   };
 
   const handlePrimaryClick = () => {
-    // Temporarily routing directly to login since auth is removed
-    navigate('/login');
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    if (role === 'seller') {
+      navigate('/seller/dashboard');
+    } else if (role === 'lender') {
+      navigate('/lender/dashboard');
+    } else {
+      navigate('/');
+    }
   };
 
   return (
@@ -92,7 +104,7 @@ const Navbar = () => {
             className="relative group overflow-hidden px-6 sm:px-7 py-2.5 sm:py-3 rounded-2xl font-semibold text-sm flex items-center gap-1.5 bg-slate-900/90 dark:bg-slate-900/90 text-white border border-white/10 backdrop-blur-xl shadow-[0_10px_30px_rgba(15,23,42,0.55)] hover:shadow-[0_0_30px_rgba(71,196,183,0.7)] active:scale-95 transition-all"
           >
             <span className="relative z-10 flex items-center gap-1.5">
-              Log in
+              {isAuthenticated ? 'Dashboard' : 'Log in'}
               <ChevronRight
                 size={16}
                 className="group-hover:translate-x-1 transition-transform duration-300 text-[#47C4B7]"
@@ -140,7 +152,7 @@ const Navbar = () => {
             }}
             className="mt-2 w-full bg-gradient-to-r from-[#47C4B7] to-emerald-500 hover:from-emerald-500 hover:to-[#47C4B7] text-white py-3.5 rounded-xl font-semibold text-sm shadow-[0_10px_30px_rgba(71,196,183,0.6)] transition-all"
           >
-            Log in
+            {isAuthenticated ? 'Go to Dashboard' : 'Log in'}
           </button>
         </div>
       )}
