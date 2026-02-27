@@ -406,19 +406,20 @@ export const processBuyerRepayment = async (req, res) => {
     const invoice = await Invoice.findById(id);
     if (!invoice) return res.status(404).json({ error: "Invoice not found." });
 
+    console.log("invoice found")
     if (invoice.status !== "Funded") {
       return res.status(400).json({ error: "Only 'Funded' invoices can be settled." });
     }
 
     const winningBid = await Bid.findOne({ invoice: id, status: "Funded" });
     if (!winningBid) return res.status(404).json({ error: "Winning bid not found." });
-
+    console.log("winning bid found")
     const buyerPayment = invoice.totalAmount;
     const lenderPrincipal = winningBid.loanAmount;
-    const lenderTotalReturn = winningBid.repaymentAmount;
     const platformFee = Math.ceil(lenderPrincipal * 0.02);
+    const lenderTotalReturn = lenderPrincipal - platformFee;
     const sellerRemainingBalance = buyerPayment - lenderTotalReturn - platformFee;
-
+    console.log(sellerRemainingBalance)
     await Lender.findByIdAndUpdate(winningBid.lender, {
       $inc: { walletBalance: lenderTotalReturn }
     });
