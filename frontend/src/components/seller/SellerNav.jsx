@@ -2,14 +2,14 @@ import React from "react";
 import {
   LayoutDashboard,
   Receipt,
-  CreditCard,
+  Wallet, // Changed from CreditCard to Wallet
   Users,
   ShieldCheck,
   Settings,
   X,
   Lock,
   BadgeCheck,
-  Gavel // ✅ Added Gavel icon for the Bids menu item
+  Gavel 
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -19,7 +19,7 @@ const MENU_ITEMS = [
   { key: "overview", icon: LayoutDashboard, label: "Overview" },
   { key: "invoices", icon: Receipt, label: "Invoices" },
   { key: "invoice", icon: Gavel, label: "Invoice Portfolio" }, 
-  { key: "payments", icon: CreditCard, label: "Payments" },
+  { key: "wallet", icon: Wallet, label: "Wallet" }, // Changed Payments to Wallet
   { key: "buyers", icon: Users, label: "Buyers" },
 ];
 
@@ -59,13 +59,14 @@ const SellerNav = ({
       return;
     }
     
-    // ✅ Updated to handle redirection for the new bids route
     if (key === "overview") {
       navigate("/seller/dashboard");
     } else if (key === "invoices") {
       navigate("/seller/invoices");
     } else if (key === "invoice") {
-      navigate("/seller/invoice"); // ✅ Routes to the Seller Bids page
+      navigate("/seller/invoice"); 
+    } else if (key === "wallet") { // Added routing for wallet
+      navigate("/seller/wallet"); 
     } else {
       onChange?.(key);
     }
