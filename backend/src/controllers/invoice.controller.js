@@ -145,38 +145,49 @@ const generateUniqueMailToken = (userId, invoiceId) => {
 };
 
 
+// ... (Keep your uploadInvoice, getAllInvoices, getInvoiceById, getSellerInvoices, and generateUniqueMailToken exactly as they are) ...
+
+// ==========================================
+// TRIGGER EMAIL TO BUYER
+// ==========================================
 export const verifyInvoiceBuyerWithEmail = async (req, res) => {
-    console.log("Invoice Verification Started...");
+   console.log("Invoice Verification Started...");
 
    try {
     const invoiceId = req.query.invoiceId;
-    const user = req.user;
+    const user = req.user; // The Seller
 
     if(!invoiceId) {
       console.error("Invoice Id required");
-      return res.status(404).json({success: false, message: "Invoice Id required"})
+      return res.status(400).json({success: false, message: "Invoice Id required"})
     }
 
     const invoice = await Invoice.findById(invoiceId)
-    if(invoice) {
-      console.log("Invoice found In Database...");
-        console.log(invoice.seller, " - ", user._id)
-      if(invoice.seller.toString() == user._id.toString()) {
-        console.log("Invoice Seller confirmed");
-        console.log("sending verification mail to buyer: ", invoice.buyerEmail);
-
-
-        const token = generateUniqueMailToken(user._id.toString(), invoiceId.toString())
-        sendInvoiceVerificationMailToBuyer({ to: invoice.buyerEmail, token: token});
-
-      } else {
-        console.log("seller does not match with invoice");
-        return res.status(404).json({success: false, message: "seller does not match with invoice"});
-      }
-    } else {
+    
+    if(!invoice) {
       console.error("Invoice not found with id: ", invoiceId);
       return res.status(404).json({success: false, message: "Invoice not found"})
     }
+
+    console.log("Invoice found In Database...");
+    
+    if(invoice.seller.toString() !== user._id.toString()) {
+      console.log("seller does not match with invoice");
+      return res.status(403).json({success: false, message: "Unauthorized: seller does not match with invoice"});
+    }
+
+    console.log("Invoice Seller confirmed");
+    console.log("sending verification mail to buyer: ", invoice.buyerEmail);
+
+    const token = generateUniqueMailToken(user._id.toString(), invoiceId.toString())
+    
+    // THE FIX: Passing the full invoice and user (seller) objects
+    await sendInvoiceVerificationMailToBuyer({ 
+        to: invoice.buyerEmail, 
+        token: token,
+        invoice: invoice, 
+        seller: user 
+    });
 
     return res.status(200).json({success: true, message:"Invoice verification mail sent to buyer"});
 
@@ -186,43 +197,63 @@ export const verifyInvoiceBuyerWithEmail = async (req, res) => {
    }
 }
 
+
+// ==========================================
+// BUYER CLICKS THE MAGIC LINK IN EMAIL
+// ==========================================
 export const verifyInvoice = async (req, res) => {
   console.log("verifying invoice...")
   try {
-    
     const token = req.query.token;
     const isVerified = req.query.verify;
     
-    
     if(!token || token.length < 10) {
       console.error("Token is required")
-      return res.status(401).json({success: false, message: "Authorization token required"})
+      return res.status(401).send("<h1>Authorization token required</h1>");
     }
+    
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
     const invoice = await Invoice.findById(decoded.invoiceId);
+    
     if(!invoice) {
       console.error("Invoice not found...")
-      return res.status(404).json({success: false, message: "Invoice not found"});
+      return res.status(404).send("<h1>Invoice not found</h1>");
     }
 
-    if(isVerified == "true") {
+    if(isVerified === "true") {
       invoice.status = "Verified";
       invoice.visibleForMarketplaceDate = Date.now();
       await invoice.save();
       console.log("Updated Invoice Status: ", invoice.status);
-      return res.status(200).json({success: true, message: "Invoice status updated to verified"})
+      
+      // HACKATHON TRICK: Send a beautiful HTML success page instead of raw JSON!
+      return res.status(200).send(`
+        <div style="font-family: system-ui, sans-serif; height: 100vh; display: flex; align-items: center; justify-content: center; background-color: #f8fafc;">
+          <div style="background: white; padding: 40px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); text-align: center;">
+            <div style="background: #10b981; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto 20px;">✓</div>
+            <h1 style="color: #0f172a; margin-bottom: 10px;">Invoice Verified!</h1>
+            <p style="color: #64748b;">Thank you for confirming. You can now close this tab.</p>
+          </div>
+        </div>
+      `);
     } else {
-      console.log("Inovice is not verified by buyer");
-      return res.status(400).json({success: false, message: "Invoice dismissed by buyer"})
-    }
+      console.log("Invoice is not verified by buyer");
+      invoice.status = "Rejected_By_Buyer"; // Good practice to track rejections
+      await invoice.save();
 
+      return res.status(400).send(`
+        <div style="font-family: system-ui, sans-serif; height: 100vh; display: flex; align-items: center; justify-content: center; background-color: #f8fafc;">
+          <div style="background: white; padding: 40px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); text-align: center;">
+            <div style="background: #ef4444; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto 20px;">✕</div>
+            <h1 style="color: #0f172a; margin-bottom: 10px;">Verification Rejected</h1>
+            <p style="color: #64748b;">The seller has been notified of the discrepancy.</p>
+          </div>
+        </div>
+      `);
+    }
 
   } catch (error) {
     console.log("Error in invoice verification: ", error);
-    return res.status(500).json({success: false, message: error.message});
+    return res.status(500).send("<h1>Link Expired or Invalid</h1>");
   }
-
-
-
 }
