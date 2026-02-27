@@ -13,72 +13,121 @@ import {
   Users,
   ArrowDownRight,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, useMotionValue, useSpring } from 'framer-motion';
 import Footer from '../components/Footer';
 
+// Define stagger animation variants for the Hero Left content
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.12, // Delay between each element loading
+      delayChildren: 0.1,
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, damping: 15 } }
+};
+
 const LandingPage = () => {
+  // 1. Lift the mouse tracking state to the parent page
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  const mouseXSpring = useSpring(x, { stiffness: 150, damping: 15 });
+  const mouseYSpring = useSpring(y, { stiffness: 150, damping: 15 });
+
+  // 2. Track mouse movement across the entire page
+  const handleMouseMove = (e) => {
+    // We use window.innerWidth/innerHeight to track relative to the whole screen
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    
+    // Calculate percentage from the center (-0.5 to 0.5)
+    const xPct = e.clientX / width - 0.5;
+    const yPct = e.clientY / height - 0.5;
+    
+    x.set(xPct);
+    y.set(yPct);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
   return (
-    <div className="bg-slate-50 dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-900 dark:text-slate-100 selection:bg-indigo-100">
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 lg:pt-32 pb-10 lg:pb-12">
+    // 3. Attach the mouse events to the main wrapper
+    <div 
+      className="bg-slate-50 dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-900 dark:text-slate-100 selection:bg-indigo-100 min-h-screen flex flex-col overflow-x-hidden"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 lg:pt-32 pb-10 lg:pb-12">
         {/* HERO + DASHBOARD */}
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-          {/* HERO LEFT */}
+          
+          {/* HERO LEFT - Now uses stagger children animations */}
           <motion.section
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
           >
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/70 dark:border-slate-800/80 backdrop-blur-xl shadow-sm mb-6">
+            <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/70 dark:border-slate-800/80 backdrop-blur-xl shadow-sm mb-6 hover:-translate-y-0.5 transition-transform cursor-default">
               <Zap size={16} className="text-emerald-500" />
               <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">
                 Invoice Financing for MSMEs · Get paid in under 24 hours
               </p>
-            </div>
+            </motion.div>
 
             {/* Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-4xl font-black tracking-tight leading-tight mb-4 max-w-xl">
+            <motion.h1 variants={itemVariants} className="text-4xl sm:text-5xl lg:text-4xl font-black tracking-tight leading-tight mb-4 max-w-xl">
               Turn your unpaid invoices
               <span className="block bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-500 mt-1">
                 into instant working capital.
               </span>
-            </h1>
+            </motion.h1>
 
-            <p className="mt-4 text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-lg leading-relaxed">
+            <motion.p variants={itemVariants} className="mt-4 text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-lg leading-relaxed">
               PayNidhi unlocks <span className="font-semibold text-emerald-600 dark:text-emerald-400">70–80% of invoice value</span>{' '}
               for GST‑registered MSMEs so you can pay vendors, salaries, and accept bigger orders—without waiting 30–90 days
-            </p>
+            </motion.p>
 
             {/* Hero stats strip */}
-            <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-3 max-w-md">
-              <div className="rounded-2xl px-3 py-3 bg-white/90 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-xs shadow-sm dark:shadow-[0_18px_45px_rgba(15,23,42,0.6)]">
+            <motion.div variants={itemVariants} className="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-3 max-w-md">
+              <motion.div whileHover={{ y: -3 }} className="rounded-2xl px-3 py-3 bg-white/90 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-xs shadow-sm dark:shadow-[0_18px_45px_rgba(15,23,42,0.6)] transition-all">
                 <p className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
                   <Clock size={14} /> Avg. disbursal
                 </p>
                 <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-50">
                   &lt; 24 hours
                 </p>
-              </div>
-              <div className="rounded-2xl px-3 py-3 bg-white/90 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-xs shadow-sm dark:shadow-[0_18px_45px_rgba(15,23,42,0.6)]">
+              </motion.div>
+              <motion.div whileHover={{ y: -3 }} className="rounded-2xl px-3 py-3 bg-white/90 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-xs shadow-sm dark:shadow-[0_18px_45px_rgba(15,23,42,0.6)] transition-all">
                 <p className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
                   <IndianRupee size={14} /> Funding range
                 </p>
                 <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-50">
                   ₹5L – ₹5Cr
                 </p>
-              </div>
-              <div className="rounded-2xl px-3 py-3 bg-white/90 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-xs shadow-sm dark:shadow-[0_18px_45px_rgba(15,23,42,0.6)]">
+              </motion.div>
+              <motion.div whileHover={{ y: -3 }} className="rounded-2xl px-3 py-3 bg-white/90 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-xs shadow-sm dark:shadow-[0_18px_45px_rgba(15,23,42,0.6)] transition-all">
                 <p className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
                   <Users size={14} /> MSMEs onboarded
                 </p>
                 <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-50">
                   5,000+
                 </p>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
 
             {/* CTAs */}
-            <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <motion.div variants={itemVariants} className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4">
               <button
                 type="button"
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-2xl
@@ -89,10 +138,10 @@ const LandingPage = () => {
                            hover:-translate-y-0.5 active:translate-y-0
                            focus:outline-none focus:ring-2 focus:ring-indigo-500/70 focus:ring-offset-2
                            focus:ring-offset-slate-50 dark:focus:ring-offset-slate-950
-                           transition-all"
+                           transition-all group"
               >
                 Start as MSME Seller
-                <ArrowRight size={18} className="shrink-0" />
+                <ArrowRight size={18} className="shrink-0 group-hover:translate-x-1 transition-transform" />
               </button>
 
               <button
@@ -102,17 +151,17 @@ const LandingPage = () => {
                            bg-white/80 dark:bg-slate-900/70
                            px-9 py-3.5 text-sm sm:text-base font-semibold
                            text-slate-700 dark:text-slate-100
-                           hover:bg-slate-50 dark:hover:bg-slate-800
+                           hover:bg-slate-50 dark:hover:bg-slate-800 hover:-translate-y-0.5
                            focus:outline-none focus:ring-2 focus:ring-slate-300/80
                            focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-slate-950
                            transition-all"
               >
                 Explore Lender Marketplace
               </button>
-            </div>
+            </motion.div>
 
             {/* Short benefit bullets */}
-            <ul className="mt-6 space-y-1.5 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+            <motion.ul variants={itemVariants} className="mt-6 space-y-1.5 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
               <li className="flex items-center gap-2">
                 <CheckCircle2 size={14} className="text-emerald-500" />
                 No collateral, no long paperwork—funding based on invoice & GST data.
@@ -121,18 +170,33 @@ const LandingPage = () => {
                 <CheckCircle2 size={14} className="text-emerald-500" />
                 Flexible: finance only the invoices you choose, when you need it.
               </li>
-            </ul>
+            </motion.ul>
           </motion.section>
 
           {/* HERO RIGHT: Dashboard */}
           <motion.section
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.08, ease: 'easeOut' }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.3, type: "spring", stiffness: 80 }}
             className="relative flex justify-center"
           >
-            <div className="absolute -inset-6 bg-gradient-to-br from-emerald-400/20 via-teal-400/10 to-indigo-500/20 blur-3xl rounded-[40px] dark:opacity-80" />
-            <DashboardPreview />
+            {/* Soft pulsing animation added to the glow */}
+            <motion.div 
+              animate={{ 
+                scale: [1, 1.05, 1],
+                opacity: [0.8, 0.6, 0.8] 
+              }}
+              transition={{ 
+                duration: 4, 
+                repeat: Infinity, 
+                ease: "easeInOut" 
+              }}
+              className="absolute -inset-6 bg-gradient-to-br from-emerald-400/20 via-teal-400/10 to-indigo-500/20 blur-3xl rounded-[40px] dark:opacity-80" 
+            />
+            
+            {/* 4. Pass the tracked mouse values down to the component */}
+            <DashboardPreview mouseXSpring={mouseXSpring} mouseYSpring={mouseYSpring} />
+            
           </motion.section>
         </div>
       </main>

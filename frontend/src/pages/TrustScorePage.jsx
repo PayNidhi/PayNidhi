@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -15,7 +15,9 @@ import {
 const curvePoints = [40, 55, 48, 70, 85, 90, 80, 95];
 
 const TrustScorePage = () => {
-  const score = 742;
+  // 1. Changed to state to allow updating
+  const [score, setScore] = useState(742);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const chartPath = curvePoints
     .map((v, i) => {
@@ -24,6 +26,18 @@ const TrustScorePage = () => {
       return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
     })
     .join(' ');
+
+  // 2. Refresh handler
+  const handleRefreshScore = () => {
+    setIsRefreshing(true);
+    // Simulate a brief loading delay
+    setTimeout(() => {
+      // Generate a new random score between 700 and 800 for demonstration
+      const newScore = Math.floor(Math.random() * (800 - 700 + 1)) + 700;
+      setScore(newScore);
+      setIsRefreshing(false);
+    }, 600);
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-[radial-gradient(circle_at_top,_#020617_0,_#020617_35%,_#020617_100%)] dark:text-slate-50">
@@ -116,16 +130,18 @@ const TrustScorePage = () => {
                     strokeDashoffset={690}
                     strokeLinecap="round"
                     initial={{ strokeDashoffset: 690 }}
-                    animate={{ strokeDashoffset: 690 - (690 * 74) / 100 }}
-                    transition={{ duration: 1.1, ease: 'easeOut', delay: 0.25 }}
+                    // 3. Dynamically map the fill to the state score (score / 10 is the percentage)
+                    animate={{ strokeDashoffset: 690 - (690 * (score / 10)) / 100 }}
+                    transition={{ duration: 1.1, ease: 'easeOut' }}
                   />
                 </motion.svg>
 
                 {/* needle */}
                 <motion.div
                   initial={{ rotate: -110 }}
-                  animate={{ rotate: -110 + (220 * 0.74) }}
-                  transition={{ duration: 1.1, ease: 'easeOut', delay: 0.25 }}
+                  // 4. Dynamically map the needle rotation to the state score
+                  animate={{ rotate: -110 + (220 * (score / 1000)) }}
+                  transition={{ duration: 1.1, ease: 'easeOut' }}
                   className="absolute inset-0 flex items-center justify-center"
                 >
                   <div className="h-1 w-20 origin-left rounded-full bg-gradient-to-r from-slate-400 via-emerald-400 to-emerald-500 dark:from-slate-300 dark:via-emerald-300 dark:to-emerald-400" />
@@ -135,9 +151,11 @@ const TrustScorePage = () => {
                 {/* centre value */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <motion.span
+                    // 5. Add key={score} so the text re-animates slightly when changed
+                    key={score}
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.55, duration: 0.4 }}
+                    transition={{ duration: 0.4 }}
                     className="text-5xl sm:text-6xl font-black tracking-tight text-slate-900 dark:text-slate-50"
                   >
                     {score}
@@ -253,7 +271,7 @@ const TrustScorePage = () => {
             </div>
           </motion.div>
 
-          {/* Reliability curve – updated, professional, dark-safe */}
+          {/* Reliability curve */}
           <motion.div
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
@@ -413,11 +431,12 @@ const TrustScorePage = () => {
             program, and every access is logged for your records.
           </p>
           <motion.button
+            onClick={handleRefreshScore}
             whileHover={{ scale: 1.04, y: -2 }}
             whileTap={{ scale: 0.97 }}
             className="bg-slate-900 text-slate-50 px-8 sm:px-10 py-3.5 sm:py-4 rounded-2xl font-black text-sm sm:text-base hover:bg-sky-600 dark:bg-sky-600 dark:hover:bg-sky-500 transition-colors"
           >
-            Refresh my live score
+            {isRefreshing ? 'Refreshing...' : 'Refresh my live score'}
           </motion.button>
         </section>
       </main>
