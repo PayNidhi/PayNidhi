@@ -1,0 +1,43 @@
+# Dependencies
+/node_modules
+/client/node_modules
+/server/node_modules
+
+# Build artifacts
+/build
+/dist
+/public/build
+/client/build
+/client/dist
+
+# Environment variables
+.env
+.env.local
+
+# Testing and coverage
+coverage
+*.lcov
+.nyc_output
+
+# Logs and runtime data
+logs
+*.log
+npm-debug.log*
+pids
+*.pid
+*.seed
+
+# OS and IDE specific files
+.DS_Store           # macOS
+.idea               # IntelliJ/WebStorm
+.vscode             # VS Code (optional, if you want to ignore workspace settings)
+Thumbs.db           # Windows
+*.suo               # Visual Studio
+*.user              # Visual Studio
+*.cascadelog        # Cascade
+.lock-wscript
+
+# Optional: MongoDB specific files (if you manage them in the repo)
+*.sqlite
+*.db
+/data/db
