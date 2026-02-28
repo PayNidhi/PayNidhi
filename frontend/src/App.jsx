@@ -30,7 +30,7 @@ import LenderKyc from "./pages/lender/LenderKyc";
 import LenderMarketplace from "./pages/lender/LenderMarketplace";
 import LenderBidsPage from "./pages/lender/LenderBidsPage";
 import LenderWallet from "./pages/lender/LenderWallet";
-// import LenderSettings from "./pages/lender/LenderSettings";
+import LenderSettings from "./pages/lender/LenderSettings";
 
 import AdminLoginPage from "./pages/admin/AdminLoginPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -84,7 +84,7 @@ function App() {
           <Route path="/lender/marketplace" element={<LenderMarketplace />} />
           <Route path="/lender/bids" element={<LenderBidsPage />} />
           <Route path="/lender/wallet" element={<LenderWallet />} />
-          {/* <Route path="/lender/settings" element={<LenderSettings />} /> */}
+          <Route path="/lender/settings" element={<LenderSettings />} />
         </Route>
 
         {/* Admin protected area */}

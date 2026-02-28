@@ -4,6 +4,60 @@ import Transaction from "../models/Transaction.model.js"; // 👈 Added for Wall
 import Lender from "../models/Lender.model.js";           // 👈 Added for Wallet Balance
 
 // ==========================================
+// @desc    Get Lender Dashboard Summary
+// @route   GET /api/lender/dashboard-summary
+// ==========================================
+export const getDashboardSummary = async (req, res) => {
+  try {
+    const lenderId = req.user._id;
+
+    // 1. Fetch the lender profile for wallet and limits
+    const lender = await Lender.findById(lenderId);
+    if (!lender) return res.status(404).json({ error: "Lender not found" });
+
+    // 2. Count Active Bids (bids that aren't explicitly rejected)
+    const activeBids = await Bid.countDocuments({ 
+      lender: lenderId, 
+      status: { $ne: "Rejected" } 
+    });
+
+    // 3. Count unique MSMEs (Sellers) this lender has interacted with
+    const uniqueSellers = await Bid.distinct("seller", { lender: lenderId });
+    const totalMSMEs = uniqueSellers.length;
+
+    // 4. Portfolio Status Mock (You can replace with a real aggregation later)
+    const portfolioStatusCounts = {
+      "Active": 5,
+      "Pending": activeBids,
+      "Completed": 12
+    };
+
+    // 5. Historical Chart Data (Mocked growth for visual appeal until you have 12 months of live data)
+    const deployedByMonth = [
+      { name: 'Jan', value: 400000 }, { name: 'Feb', value: 700000 }, { name: 'Mar', value: 500000 },
+      { name: 'Apr', value: 900000 }, { name: 'May', value: 1200000 }, { name: 'Jun', value: 800000 },
+      { name: 'Jul', value: 1600000 }, { name: 'Aug', value: 1100000 }, { name: 'Sep', value: 1900000 },
+      { name: 'Oct', value: 2100000 }, { name: 'Nov', value: 2400000 }, { name: 'Dec', value: Math.max(lender.utilizedLimit || 0, 2800000) }
+    ];
+
+    // 6. Send the response matching the frontend's exact expected structure
+    res.json({
+      totalInvested: lender.utilizedLimit || 0,
+      availableCapital: lender.walletBalance || 0,
+      activeBids: activeBids || 0,
+      totalMSMEs: totalMSMEs || 0,
+      trustScore: 850, // Hardcoded for lenders currently
+      portfolioStatusCounts,
+      deployedByMonth
+    });
+
+  } catch (error) {
+    console.error("Dashboard Summary Error:", error);
+    res.status(500).json({ error: "Failed to fetch dashboard summary." });
+  }
+};
+
+// ==========================================
 // @desc    Get Feed of Invoices + Bids
 // @route   GET /api/lender/marketplace
 // ==========================================
@@ -183,5 +237,57 @@ export const getWalletDetails = async (req, res) => {
   } catch (error) {
     console.error("Wallet Fetch Error:", error);
     res.status(500).json({ error: "Failed to fetch wallet details" });
+  }
+};
+
+// ==========================================
+// @desc    Lender requests a withdrawal
+// @route   POST /api/lender/withdraw
+// ==========================================
+export const requestWithdrawal = async (req, res) => {
+  try {
+    const { amount } = req.body;
+    const lenderId = req.user._id;
+
+    // 1. Validate the Request
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ error: "Please enter a valid amount to withdraw." });
+    }
+
+    const lender = await Lender.findById(lenderId);
+    if (!lender) return res.status(404).json({ error: "Lender not found." });
+
+    if (amount > lender.walletBalance) {
+      return res.status(400).json({
+        error: "Insufficient wallet balance.",
+        availableBalance: lender.walletBalance
+      });
+    }
+
+    // 2. 🏦 FREEZE THE FUNDS (Deduct from virtual wallet)
+    lender.walletBalance -= amount;
+    await lender.save();
+
+    // 3. 🧾 CREATE THE WITHDRAWAL LEDGER (Status: SUCCESS for instant demo)
+    const withdrawalReceipt = await Transaction.create({
+      lender: lenderId, // Attached to Lender
+      amount: amount,
+      fee: 0, 
+      type: "WITHDRAWAL",
+      status: "SUCCESS", 
+      referenceId: `WD-${Date.now()}`,
+      description: `Withdrawal to primary bank account`
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Withdrawal request submitted successfully. Funds will arrive in 1-2 business days.",
+      receipt: withdrawalReceipt,
+      remainingBalance: lender.walletBalance
+    });
+
+  } catch (error) {
+    console.error("Withdrawal Error:", error);
+    res.status(500).json({ error: "Failed to process withdrawal request." });
   }
 };

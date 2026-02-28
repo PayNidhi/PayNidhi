@@ -1,14 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    TrendingUp, Users, Briefcase, Clock,
-    ArrowUpRight, ArrowDownRight, Search,
-    RefreshCw, Wallet, Receipt, CheckCircle2,
-    AlertCircle, ShieldCheck, History, Info,
-    Zap, ChevronRight, Calculator, FileCheck,
-    Banknote, Scale, ShieldAlert, Fingerprint,
-    Cpu, Activity, Lock, BarChart3, Shield,
-    UserCheck, CreditCard, DollarSign
+    TrendingUp, Briefcase, RefreshCw, Calculator, 
+    Scale, Zap, Shield, ShieldCheck, UserCheck, DollarSign,
+    Lock, BarChart3
 } from 'lucide-react';
 import { getStats, getPendingNOAs, verifyNOA, settleInvoice } from '../../api/adminApi';
 import adminApi from '../../api/adminApi';
@@ -17,7 +12,7 @@ import toast from 'react-hot-toast';
 // --- Premium UI Components ---
 
 const GlassCard = ({ children, className = "" }) => (
-    <div className={`bg-white border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] rounded-[2.5rem] ${className}`}>
+    <div className={`bg-white border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.02)] rounded-[1.5rem] sm:rounded-[2rem] ${className}`}>
         {children}
     </div>
 );
@@ -27,57 +22,40 @@ const StatCard = ({ title, value, icon: Icon, trend, description, delay }) => (
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay, duration: 0.5 }}
-        className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden group hover:shadow-xl hover:shadow-slate-200/20 transition-all"
+        className="bg-white p-4 sm:p-5 rounded-[1.25rem] sm:rounded-[1.5rem] border border-slate-100 shadow-sm relative overflow-hidden group hover:shadow-[0_10px_30px_rgba(15,143,121,0.08)] hover:-translate-y-1 transition-all flex flex-col h-full justify-between"
     >
-        <div className="flex justify-between items-start mb-4">
-            <div className={`p-3 rounded-2xl bg-slate-50 text-slate-400 group-hover:text-[#47C4B7] group-hover:bg-[#47C4B7]/5 transition-all duration-300`}>
-                <Icon size={20} />
+        <div className="flex justify-between items-start mb-3 sm:mb-4">
+            <div className="p-2 sm:p-2.5 rounded-xl bg-[#F3FBF9] text-[#0f8f79] group-hover:scale-110 transition-transform duration-300 shadow-sm border border-[#7FE0CC]/30">
+                <Icon size={18} />
             </div>
             {trend && (
-                <div className="flex items-center text-[10px] font-bold px-2 py-1 bg-emerald-50 text-emerald-600 rounded-lg">
-                    <ArrowUpRight size={10} className="mr-0.5" />
+                <div className="flex items-center text-[9px] sm:text-[10px] font-bold px-2 py-1 bg-emerald-50 text-emerald-600 rounded-lg border border-emerald-100/50">
+                    <TrendingUp size={10} className="mr-1" />
                     {trend}
                 </div>
             )}
         </div>
         <div className="space-y-1">
-            <h3 className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">{title}</h3>
-            <p className="text-2xl font-black text-slate-800 tracking-tighter">{value}</p>
-            <p className="text-[9px] text-slate-300 font-medium leading-tight">{description}</p>
+            <h3 className="text-slate-400 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">{title}</h3>
+            <p className="text-lg sm:text-xl font-black text-slate-800 tracking-tighter truncate">{value}</p>
+            <p className="text-[9px] text-slate-400 font-medium leading-tight truncate">{description}</p>
         </div>
     </motion.div>
 );
 
 const SectionHeader = ({ title, subtitle, icon: Icon }) => (
-    <div className="flex items-center gap-4 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-[#47C4B7]">
+    <div className="flex items-center gap-3 mb-4 sm:mb-6">
+        <div className="w-10 h-10 rounded-xl bg-[#F3FBF9] border border-[#7FE0CC]/40 flex items-center justify-center text-[#0f8f79] shadow-sm">
             <Icon size={20} />
         </div>
         <div>
-            <h2 className="text-lg font-black text-slate-800 tracking-tight uppercase">{title}</h2>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{subtitle}</p>
+            <h2 className="text-base sm:text-lg font-black text-slate-800 tracking-tight uppercase">{title}</h2>
+            <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest">{subtitle}</p>
         </div>
     </div>
 );
 
-const StatusBadge = ({ status }) => {
-    const config = {
-        'Pending_NOA': { label: 'Pending NOA', color: 'bg-amber-50 text-amber-600 border-amber-100' },
-        'Under Review': { label: 'Under Review', color: 'bg-blue-50 text-blue-600 border-blue-100' },
-        'Verified': { label: 'Verified', color: 'bg-emerald-50 text-emerald-600 border-emerald-100' },
-        'Repaid': { label: 'Repaid', color: 'bg-slate-100 text-slate-500 border-slate-200' },
-        'default': { label: 'Active', color: 'bg-teal-50 text-teal-600 border-teal-100' }
-    };
-    const s = config[status] || config.default;
-    return (
-        <span className={`px-2.5 py-1 rounded-lg border text-[9px] font-bold uppercase tracking-widest ${s.color}`}>
-            {s.label}
-        </span>
-    );
-};
-
 // --- Main Page Component ---
-
 const AdminDashboard = () => {
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -88,8 +66,6 @@ const AdminDashboard = () => {
 
     const fetchData = async () => {
         try {
-            // Fetch in background without blocking UI
-
             const [statsRes, noaRes, financesRes] = await Promise.all([
                 getStats(),
                 getPendingNOAs(),
@@ -130,8 +106,8 @@ const AdminDashboard = () => {
     const runSettlementSimulation = (loan) => {
         const principal = loan.loanAmount;
         const interest = loan.bid?.repaymentAmount - principal;
-        const fee = principal * 0.02; // 2% Admin Fee
-        const sellerSettlement = loan.loanAmount - fee; // Simplified for demo breakdown
+        const fee = principal * 0.02; 
+        const sellerSettlement = loan.loanAmount - fee; 
 
         setSettlementBreakdown({
             invoiceId: loan.invoice?.invoiceNumber,
@@ -155,32 +131,30 @@ const AdminDashboard = () => {
         }
     };
 
-
-
     return (
-        <div className="max-w-[1700px] mx-auto space-y-12 pb-24 pt-2 pl-2 pr-8">
+        <div className="w-full max-w-[1600px] mx-auto space-y-4 sm:space-y-6 lg:space-y-8 pb-24 pt-3 sm:pt-4 px-4 sm:px-6 lg:px-8">
 
-            {/* --- PAGE IDENTITY --- */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-                <div className="space-y-1">
-                    <h1 className="text-3xl font-black text-slate-800 tracking-tight flex items-center gap-3">
-                        <BarChart3 className="text-[#47C4B7]" size={36} />
+            {/* --- COMPACT PAGE IDENTITY --- */}
+            <div className="flex flex-row items-center justify-between gap-4 bg-white px-4 py-3 sm:px-5 sm:py-4 rounded-[1.25rem] border border-slate-100 shadow-sm">
+                <div className="space-y-0.5">
+                    <h1 className="text-lg sm:text-xl font-black text-slate-800 tracking-tight flex items-center gap-2">
+                        <BarChart3 className="text-[#0f8f79]" size={22} />
                         Global Intelligence
                     </h1>
-                    <p className="text-[13px] font-medium text-slate-500 border-l-2 border-[#47C4B7] pl-3">
+                    <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 border-l-2 border-[#47C4B7] pl-2 hidden sm:block">
                         Real-time platform financial health & operational audit
                     </p>
                 </div>
                 <button
                     onClick={handleRefresh}
-                    className="p-3 bg-white border border-slate-100 rounded-2xl text-slate-400 hover:text-[#47C4B7] shadow-sm transition-all active:scale-95"
+                    className="p-2 sm:p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-500 hover:text-[#0f8f79] hover:bg-[#E0F6F2] shadow-sm transition-all active:scale-95 flex-shrink-0"
                 >
-                    <RefreshCw size={20} className={refreshing ? 'animate-spin' : 'hover:rotate-180 duration-700'} />
+                    <RefreshCw size={16} className={`${refreshing ? 'animate-spin' : 'hover:rotate-180 duration-700'}`} />
                 </button>
             </div>
 
             {/* --- TOP ANALYTICS GRID --- */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-5">
                 <StatCard
                     title="Total GMV"
                     value={`₹${stats?.kpis?.totalGMV?.toLocaleString() || '0'}`}
@@ -220,45 +194,46 @@ const AdminDashboard = () => {
                 />
                 <StatCard
                     title="Escrow Balance"
-                    value={`₹${(stats?.kpis?.totalGMV * 0.4)?.toLocaleString() || '0'}`} // Mock/calculated
-                    description="Total funds held in settlement"
+                    value={`₹${(stats?.kpis?.totalGMV * 0.4)?.toLocaleString() || '0'}`} 
+                    description="Funds held in settlement"
                     icon={Lock}
                     delay={0.6}
                 />
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-10">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-5 lg:gap-6">
+                
                 {/* --- MAIN COLUMN (2/3) --- */}
-                <div className="xl:col-span-2 space-y-10">
+                <div className="xl:col-span-2 space-y-5 lg:space-y-6">
 
                     {/* LEGAL AUTHENTICATOR (Warning Section) */}
-                    <GlassCard className="p-8 border-l-8 border-l-amber-400">
+                    <GlassCard className="p-4 sm:p-6 border-l-4 sm:border-l-8 border-l-amber-400">
                         <SectionHeader title="Legal Authenticator" subtitle="Pending NOA Verification Queue" icon={Scale} />
 
-                        <div className="mt-6">
+                        <div className="mt-4">
                             {pendingNoa.length > 0 ? (
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left">
+                                <div className="overflow-x-auto custom-scrollbar pb-2">
+                                    <table className="w-full text-left min-w-[500px]">
                                         <thead>
-                                            <tr className="text-slate-400 text-[10px] font-bold uppercase tracking-widest border-b border-slate-50">
-                                                <th className="px-4 py-4">Invoice ID</th>
-                                                <th className="px-4 py-4">Seller</th>
-                                                <th className="px-4 py-4 text-center">Amount</th>
-                                                <th className="px-4 py-4 text-right">Action</th>
+                                            <tr className="text-slate-400 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest border-b border-slate-100">
+                                                <th className="px-3 sm:px-4 py-3">Invoice ID</th>
+                                                <th className="px-3 sm:px-4 py-3">Seller</th>
+                                                <th className="px-3 sm:px-4 py-3 text-center">Amount</th>
+                                                <th className="px-3 sm:px-4 py-3 text-right">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-50">
                                             {pendingNoa.map(noa => (
                                                 <tr key={noa._id} className="hover:bg-slate-50 transition-colors">
-                                                    <td className="px-4 py-6 text-xs font-mono font-bold text-slate-600">{noa.invoiceNumber}</td>
-                                                    <td className="px-4 py-6">
-                                                        <span className="text-xs font-black text-slate-800 uppercase">{noa.seller?.companyName}</span>
+                                                    <td className="px-3 sm:px-4 py-4 text-[11px] sm:text-xs font-mono font-bold text-slate-600">{noa.invoiceNumber}</td>
+                                                    <td className="px-3 sm:px-4 py-4">
+                                                        <span className="text-[10px] sm:text-xs font-black text-slate-800 uppercase line-clamp-1">{noa.seller?.companyName}</span>
                                                     </td>
-                                                    <td className="px-4 py-6 text-center text-sm font-bold text-slate-800">₹{noa.totalAmount?.toLocaleString()}</td>
-                                                    <td className="px-4 py-6 text-right">
+                                                    <td className="px-3 sm:px-4 py-4 text-center text-xs sm:text-sm font-bold text-[#0f8f79]">₹{noa.totalAmount?.toLocaleString()}</td>
+                                                    <td className="px-3 sm:px-4 py-4 text-right">
                                                         <button
                                                             onClick={() => handleApproveNOA(noa._id)}
-                                                            className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-black rounded-xl uppercase tracking-widest shadow-lg shadow-amber-500/20"
+                                                            className="px-4 py-2 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white text-[9px] sm:text-[10px] font-black rounded-lg uppercase tracking-widest shadow-md hover:shadow-lg transition-all active:scale-95"
                                                         >
                                                             Review
                                                         </button>
@@ -269,47 +244,47 @@ const AdminDashboard = () => {
                                     </table>
                                 </div>
                             ) : (
-                                <div className="bg-slate-50/50 rounded-2xl py-12 text-center border-2 border-dashed border-slate-100">
-                                    <p className="text-slate-300 font-bold uppercase tracking-[0.2em] text-[11px]">No entries requiring attention</p>
+                                <div className="bg-slate-50/80 rounded-[1rem] py-8 text-center border-2 border-dashed border-slate-200">
+                                    <p className="text-slate-400 font-bold uppercase tracking-[0.15em] text-[10px] sm:text-[11px]">Queue is clear. No entries requiring attention.</p>
                                 </div>
                             )}
                         </div>
                     </GlassCard>
 
                     {/* ESCROW SETTLEMENT ENGINE */}
-                    <GlassCard className="p-8">
+                    <GlassCard className="p-4 sm:p-6">
                         <SectionHeader title="Escrow Settlement Engine" subtitle="Programmatic Disbursal Queue" icon={Calculator} />
 
-                        <div className="space-y-8">
+                        <div className="space-y-5 sm:space-y-6">
                             {settlementBreakdown && (
                                 <motion.div
                                     initial={{ opacity: 0, scale: 0.95 }}
                                     animate={{ opacity: 1, scale: 1 }}
-                                    className="p-6 bg-slate-900 rounded-[2rem] text-white relative overflow-hidden"
+                                    className="p-4 sm:p-5 bg-slate-900 rounded-[1.25rem] text-white relative overflow-hidden"
                                 >
-                                    <div className="absolute top-0 right-0 p-8 opacity-10"><Zap size={80} /></div>
-                                    <div className="relative z-10 flex flex-col md:flex-row justify-between gap-8">
-                                        <div className="space-y-2">
-                                            <p className="text-[#47C4B7] text-[10px] font-bold uppercase">Simulation Active: {settlementBreakdown.invoiceId}</p>
-                                            <h3 className="text-2xl font-black">Mathematical Split</h3>
+                                    <div className="absolute top-0 right-0 p-4 opacity-10"><Zap size={60} /></div>
+                                    <div className="relative z-10 flex flex-col md:flex-row justify-between gap-4 sm:gap-6">
+                                        <div className="space-y-1">
+                                            <p className="text-[#47C4B7] text-[9px] font-bold uppercase tracking-wider">Simulation Active: {settlementBreakdown.invoiceId}</p>
+                                            <h3 className="text-lg sm:text-xl font-black">Mathematical Split</h3>
                                         </div>
-                                        <div className="flex gap-6">
-                                            <div className="text-center">
-                                                <p className="text-emerald-400 text-lg font-black">₹{settlementBreakdown.lenderPayout?.toLocaleString()}</p>
-                                                <p className="text-[9px] text-slate-500 font-bold uppercase">Lender Payout</p>
+                                        <div className="flex flex-wrap md:flex-nowrap gap-4 sm:gap-6 justify-between md:justify-start">
+                                            <div className="text-left md:text-center w-[45%] md:w-auto">
+                                                <p className="text-emerald-400 text-sm sm:text-base font-black">₹{settlementBreakdown.lenderPayout?.toLocaleString()}</p>
+                                                <p className="text-[8px] sm:text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Lender Payout</p>
                                             </div>
-                                            <div className="text-center">
-                                                <p className="text-blue-400 text-lg font-black">₹{settlementBreakdown.sellerSettlement?.toLocaleString()}</p>
-                                                <p className="text-[9px] text-slate-500 font-bold uppercase">Seller Credit</p>
+                                            <div className="text-left md:text-center w-[45%] md:w-auto">
+                                                <p className="text-blue-400 text-sm sm:text-base font-black">₹{settlementBreakdown.sellerSettlement?.toLocaleString()}</p>
+                                                <p className="text-[8px] sm:text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Seller Credit</p>
                                             </div>
-                                            <div className="text-center">
-                                                <p className="text-rose-400 text-lg font-black">₹{settlementBreakdown.platformFee?.toLocaleString()}</p>
-                                                <p className="text-[9px] text-slate-500 font-bold uppercase">Platform Fee</p>
+                                            <div className="text-left md:text-center w-full md:w-auto pt-2 md:pt-0 border-t border-slate-800 md:border-none">
+                                                <p className="text-rose-400 text-sm sm:text-base font-black">₹{settlementBreakdown.platformFee?.toLocaleString()}</p>
+                                                <p className="text-[8px] sm:text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Platform Fee</p>
                                             </div>
                                         </div>
                                         <button
                                             onClick={() => executeSettle(settlementBreakdown.id)}
-                                            className="px-8 py-3 bg-[#47C4B7] text-white rounded-2xl text-xs font-black uppercase tracking-widest self-center"
+                                            className="w-full md:w-auto px-6 py-2.5 bg-[#0f8f79] hover:bg-[#0c7865] text-white rounded-xl text-[10px] font-black uppercase tracking-widest md:self-center transition-colors shadow-lg shadow-[#0f8f79]/30"
                                         >
                                             Execute
                                         </button>
@@ -317,30 +292,30 @@ const AdminDashboard = () => {
                                 </motion.div>
                             )}
 
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left">
+                            <div className="overflow-x-auto custom-scrollbar pb-2">
+                                <table className="w-full text-left min-w-[600px]">
                                     <thead>
-                                        <tr className="text-slate-400 text-[10px] font-bold uppercase tracking-widest border-b border-slate-50">
-                                            <th className="px-4 py-4">Inovice ID</th>
-                                            <th className="px-4 py-4">Seller</th>
-                                            <th className="px-4 py-4">Lender</th>
-                                            <th className="px-4 py-4 text-center">Amount</th>
-                                            <th className="px-4 py-4 text-right">Action</th>
+                                        <tr className="text-slate-400 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest border-b border-slate-100">
+                                            <th className="px-3 sm:px-4 py-3">Invoice</th>
+                                            <th className="px-3 sm:px-4 py-3">Seller</th>
+                                            <th className="px-3 sm:px-4 py-3">Lender</th>
+                                            <th className="px-3 sm:px-4 py-3 text-center">Amount</th>
+                                            <th className="px-3 sm:px-4 py-3 text-right">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-50">
-                                        {activeLoans.filter(l => !l.isSettled).slice(0, 3).map(loan => (
+                                        {activeLoans.filter(l => !l.isSettled).slice(0, 4).map(loan => (
                                             <tr key={loan._id} className="hover:bg-slate-50 transition-colors">
-                                                <td className="px-4 py-6 text-xs font-bold text-slate-600">{loan.invoice?.invoiceNumber}</td>
-                                                <td className="px-4 py-6 text-[10px] font-bold text-slate-500 uppercase">{loan.seller?.companyName}</td>
-                                                <td className="px-4 py-6 text-[10px] font-bold text-slate-500 uppercase">{loan.lender?.companyName}</td>
-                                                <td className="px-4 py-6 text-center text-sm font-bold text-slate-800 italic">₹{loan.loanAmount?.toLocaleString()}</td>
-                                                <td className="px-4 py-6 text-right">
+                                                <td className="px-3 sm:px-4 py-4 text-[11px] font-mono font-bold text-slate-600">{loan.invoice?.invoiceNumber}</td>
+                                                <td className="px-3 sm:px-4 py-4 text-[9px] font-bold text-slate-500 uppercase line-clamp-1">{loan.seller?.companyName}</td>
+                                                <td className="px-3 sm:px-4 py-4 text-[9px] font-bold text-slate-500 uppercase line-clamp-1">{loan.lender?.companyName}</td>
+                                                <td className="px-3 sm:px-4 py-4 text-center text-xs font-bold text-slate-800">₹{loan.loanAmount?.toLocaleString()}</td>
+                                                <td className="px-3 sm:px-4 py-4 text-right">
                                                     <button
                                                         onClick={() => runSettlementSimulation(loan)}
-                                                        className="px-5 py-2.5 bg-slate-800 text-white text-[9px] font-black rounded-xl uppercase tracking-widest transition-all hover:bg-slate-700 active:scale-95"
+                                                        className="px-3 sm:px-4 py-2 bg-slate-100 text-slate-700 hover:bg-[#0f8f79] hover:text-white text-[8px] font-black rounded-lg uppercase tracking-widest transition-all active:scale-95 whitespace-nowrap"
                                                     >
-                                                        Simulate Buyer Payment
+                                                        Simulate Split
                                                     </button>
                                                 </td>
                                             </tr>
@@ -350,125 +325,40 @@ const AdminDashboard = () => {
                             </div>
                         </div>
                     </GlassCard>
-
-                    {/* ACTIVE LOANS SNAPSHOT */}
-                    <GlassCard className="p-8">
-                        <SectionHeader title="Active Loans Snapshot" subtitle="Capital Exposure Map" icon={Activity} />
-                        <div className="overflow-x-auto mt-4">
-                            <table className="w-full text-left">
-                                <thead>
-                                    <tr className="text-slate-400 text-[10px] font-bold uppercase tracking-widest border-b border-slate-50">
-                                        <th className="px-4 py-4">Invoice</th>
-                                        <th className="px-4 py-4">Seller</th>
-                                        <th className="px-4 py-4">Amount</th>
-                                        <th className="px-4 py-4">Due Date</th>
-                                        <th className="px-4 py-4 text-right">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-50">
-                                    {activeLoans.slice(0, 5).map(loan => (
-                                        <tr key={loan._id}>
-                                            <td className="px-4 py-5 text-xs font-bold text-slate-600">{loan.invoice?.invoiceNumber}</td>
-                                            <td className="px-4 py-5 text-[10px] font-medium text-slate-500 uppercase">{loan.seller?.companyName}</td>
-                                            <td className="px-4 py-5 font-bold text-slate-800">₹{loan.loanAmount?.toLocaleString()}</td>
-                                            <td className="px-4 py-5 text-[10px] text-slate-400 font-bold uppercase">
-                                                {new Date(loan.invoice?.dueDate).toLocaleDateString([], { month: 'short', day: 'numeric' })}
-                                            </td>
-                                            <td className="px-4 py-5 text-right">
-                                                <StatusBadge status={loan.isSettled ? 'Repaid' : 'Verified'} />
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </GlassCard>
                 </div>
 
                 {/* --- SIDEBAR COLUMN (1/3) --- */}
-                <div className="space-y-10">
-
-                    {/* MASTER LEDGER PREVIEW (AUDIT STREAM) */}
-                    <GlassCard className="p-8 bg-[#111827] text-white">
-                        <div className="flex items-center gap-3 mb-8">
-                            <History size={20} className="text-[#47C4B7]" />
-                            <h2 className="text-lg font-black uppercase tracking-tight">Audit Stream</h2>
-                        </div>
-                        <div className="space-y-6">
-                            {stats?.recentLedger?.map((tx, idx) => (
-                                <div key={tx._id || idx} className="flex justify-between items-center group">
-                                    <div className="flex gap-4">
-                                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-[8px] font-black ${tx.type.includes('IN') ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'
-                                            }`}>
-                                            {tx.type.split('_')[0]}
-                                        </div>
-                                        <div>
-                                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-white transition-colors">
-                                                {tx.type.replace(/_/g, ' ')}
-                                            </p>
-                                            <p className="text-[8px] text-slate-600 font-bold">ID: {tx.referenceId?.slice(-8)}</p>
-                                        </div>
-                                    </div>
-                                    <span className={`text-xs font-black ${tx.type.includes('IN') ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                        {tx.type.includes('IN') ? '+' : '-'}₹{tx.amount?.toLocaleString()}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                        <button className="w-full mt-10 py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] hover:bg-white/10 transition-all">
-                            Full Chain View
-                        </button>
-                    </GlassCard>
-
+                <div className="space-y-5 lg:space-y-6">
+                    
                     {/* TRUST & SECURITY PANEL */}
-                    <GlassCard className="p-8">
+                    <GlassCard className="p-4 sm:p-6">
                         <SectionHeader title="Platform Integrity" subtitle="Real-time Network Security" icon={Shield} />
-                        <div className="space-y-6 mt-6">
-                            <div className="flex justify-between items-center">
-                                <span className="text-[10px] font-bold text-slate-400 uppercase">KYC Registry</span>
-                                <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Clear</span>
+                        <div className="space-y-4 sm:space-y-5 mt-4">
+                            <div className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                <span className="text-[9px] font-bold text-slate-500 uppercase">KYC Registry</span>
+                                <span className="text-[9px] font-black text-emerald-600 bg-emerald-100/50 px-2 py-1 rounded uppercase tracking-widest">Clear</span>
                             </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-[10px] font-bold text-slate-400 uppercase">Security Status</span>
-                                <span className="text-[10px] font-black text-[#47C4B7] uppercase tracking-widest">99.9% Secure</span>
+                            <div className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                <span className="text-[9px] font-bold text-slate-500 uppercase">Security Status</span>
+                                <span className="text-[9px] font-black text-[#0f8f79] bg-[#E0F6F2] px-2 py-1 rounded uppercase tracking-widest">99.9% Secure</span>
                             </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-[10px] font-bold text-slate-400 uppercase">Fraud Detection</span>
-                                <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Active</span>
+                            <div className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                <span className="text-[9px] font-bold text-slate-500 uppercase">Fraud Detection</span>
+                                <span className="text-[9px] font-black text-blue-600 bg-blue-100/50 px-2 py-1 rounded uppercase tracking-widest">Active</span>
                             </div>
 
-                            <div className="pt-4">
-                                <div className="w-full bg-slate-50 h-2 rounded-full overflow-hidden border border-slate-100 shadow-inner">
+                            <div className="pt-2">
+                                <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200/50 shadow-inner">
                                     <motion.div
                                         initial={{ width: 0 }}
                                         animate={{ width: "99.9%" }}
-                                        className="h-full bg-gradient-to-r from-[#47C4B7] to-emerald-400 shadow-[0_0_10px_rgba(71,196,183,0.3)]"
+                                        transition={{ duration: 1.5, ease: "easeOut" }}
+                                        className="h-full bg-gradient-to-r from-[#47C4B7] to-[#0f8f79] shadow-[0_0_10px_rgba(15,143,121,0.5)]"
                                     />
                                 </div>
                             </div>
                         </div>
                     </GlassCard>
-
-                    {/* WITHDRAWAL ALERT (Withdrawal Hub) */}
-                    <GlassCard className="p-8 border-2 border-dashed border-slate-100 bg-slate-50/30">
-                        <div className="flex items-center gap-4 mb-6">
-                            <div className="p-3 bg-white rounded-xl shadow-sm text-indigo-500"><Banknote size={20} /></div>
-                            <div>
-                                <h4 className="text-sm font-black text-slate-800 uppercase tracking-tight">Withdrawal Hub</h4>
-                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Pending Disbursals</p>
-                            </div>
-                        </div>
-                        <div className="flex items-end justify-between">
-                            <div>
-                                <p className="text-2xl font-black text-slate-800 tracking-tighter">₹{stats?.actionRequired?.pendingWithdrawals?.reduce((acc, r) => acc + r.amount, 0)?.toLocaleString() || '0'}</p>
-                                <p className="text-[10px] text-slate-400 font-bold uppercase">{stats?.actionRequired?.pendingWithdrawals?.length || 0} Request queued</p>
-                            </div>
-                            <button className="px-5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-[9px] font-black rounded-xl uppercase tracking-widest transition-all">
-                                Review Requests
-                            </button>
-                        </div>
-                    </GlassCard>
-
                 </div>
             </div>
 

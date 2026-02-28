@@ -3,7 +3,7 @@ import {
   LayoutDashboard,
   Store,
   Gavel,
-  Wallet, // 👈 Changed Briefcase to Wallet
+  Wallet,
   ShieldCheck,
   Settings,
   X,
@@ -13,7 +13,6 @@ import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
-// 👈 Updated MENU_ITEMS
 const MENU_ITEMS = [
   { key: "overview", icon: LayoutDashboard, label: "Overview" },
   { key: "marketplace", icon: Store, label: "Marketplace" },
@@ -30,7 +29,7 @@ const LenderNav = ({
   navigateToKyc,
   isMobileOpen = false,
   onCloseMobile,
-  onHoverChange, // Tracks hover state to push dashboard
+  onHoverChange, 
 }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -58,7 +57,6 @@ const LenderNav = ({
       return;
     }
     
-    // 👈 Added proper routing for the wallet
     if (key === "overview") {
       navigate("/lender/dashboard");
     } else if (key === "marketplace") {
@@ -83,6 +81,7 @@ const LenderNav = ({
     closeMobile();
   };
 
+  // ✅ Ensured Settings Redirect
   const handleSettingsClick = () => {
     navigate("/lender/settings");
     closeMobile();
@@ -90,7 +89,7 @@ const LenderNav = ({
 
   return (
     <>
-      {/* DESKTOP SIDEBAR - Hover Expandable */}
+      {/* DESKTOP SIDEBAR */}
       <aside 
         onMouseEnter={() => onHoverChange?.(true)}   
         onMouseLeave={() => onHoverChange?.(false)}  
@@ -110,7 +109,6 @@ const LenderNav = ({
               />
             </div>
 
-            {/* Fades in on Sidebar Hover */}
             <div className="min-w-0 flex-1 opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300 delay-75">
               <p className="text-[11px] font-semibold tracking-[0.04em] text-slate-900 truncate">
                 {companyName}
@@ -140,21 +138,18 @@ const LenderNav = ({
           </div>
         </div>
 
-        {/* Section label (Fades in) */}
         <div className="px-5 pt-4 pb-2 opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300 delay-75">
           <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-[0.16em]">
             Main menu
           </p>
         </div>
 
-        {/* Main navigation - "w-full" naturally stretches and shrinks */}
         <nav className="flex-1 px-3 pb-4 space-y-1.5 overflow-y-auto overflow-x-hidden custom-scrollbar">
           {MENU_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive = activeKey === item.key;
             const isDisabled = !isKycComplete && item.key !== "overview";
 
-            // Your exact original button colors
             const baseClasses =
               "relative w-full flex items-center gap-3 rounded-2xl px-3 py-2.5 text-[11px] font-medium border transition-all duration-200 group/btn overflow-hidden";
 
@@ -192,7 +187,6 @@ const LenderNav = ({
                   <Icon size={16} />
                 </span>
                 
-                {/* Text Fades In */}
                 <span
                   className={`flex-1 text-left truncate opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300 delay-75 ${
                     isDisabled ? "font-normal" : "font-medium"
@@ -201,7 +195,6 @@ const LenderNav = ({
                   {item.label}
                 </span>
 
-                {/* Icons Fade In */}
                 {isDisabled && (
                   <div className="ml-auto flex items-center gap-1 text-[10px] font-semibold text-amber-500 opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">
                     <span className="flex h-4 w-4 items-center justify-center rounded-full bg-amber-50 border border-amber-100">!</span>
@@ -237,11 +230,15 @@ const LenderNav = ({
             </button>
           ) : (
             <button
-              onClick={handleSettingsClick}
-              className="w-full flex items-center gap-3 rounded-xl px-3 py-2 text-[11px] font-semibold transition-all duration-200 border shadow-sm bg-slate-50 text-slate-800 hover:bg-slate-100 hover:shadow-md hover:-translate-y-0.5 border-slate-200 overflow-hidden"
+              onClick={handleSettingsClick} // ✅ Triggers Navigation
+              className={`w-full flex items-center gap-3 rounded-xl px-3 py-2 text-[11px] font-semibold transition-all duration-200 border overflow-hidden ${
+                activeKey === "settings" 
+                ? "bg-slate-900 text-white border-slate-800 shadow-md" 
+                : "bg-slate-50 text-slate-800 hover:bg-slate-100 hover:shadow-md hover:-translate-y-0.5 border-slate-200 shadow-sm"
+              }`}
             >
-              <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100">
-                <Settings size={16} className="text-slate-700" />
+              <span className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl ${activeKey === "settings" ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-700"}`}>
+                <Settings size={16} />
               </span>
               <div className="flex flex-col items-start flex-1 opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300 delay-75 whitespace-nowrap">
                 <span className="font-semibold">Settings</span>
@@ -318,9 +315,18 @@ const LenderNav = ({
                 <div className="flex flex-col items-start flex-1"><span>Complete KYC</span><span className="text-[10px] text-amber-700/80">Unlock all investor features</span></div>
               </button>
             ) : (
-              <button onClick={handleSettingsClick} className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold bg-white text-slate-800 border border-slate-200 hover:bg-slate-50 hover:shadow-md transition-all duration-150">
-                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100"><Settings size={16} className="text-slate-700" /></span>
-                <div className="flex flex-col items-start flex-1"><span>Settings</span><span className="text-[10px] text-slate-500">Profile & bank details</span></div>
+              <button 
+                onClick={handleSettingsClick} // ✅ Triggers Navigation
+                className={`w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-150 border ${
+                  activeKey === "settings"
+                  ? "bg-slate-900 text-white border-slate-800 shadow-md"
+                  : "bg-white text-slate-800 border-slate-200 hover:bg-slate-50 hover:shadow-md"
+                }`}
+              >
+                <span className={`flex h-8 w-8 items-center justify-center rounded-xl ${activeKey === "settings" ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-700"}`}>
+                  <Settings size={16} />
+                </span>
+                <div className="flex flex-col items-start flex-1"><span>Settings</span><span className={`text-[10px] ${activeKey === "settings" ? "text-slate-300" : "text-slate-500"}`}>Profile & bank details</span></div>
               </button>
             )}
           </div>
