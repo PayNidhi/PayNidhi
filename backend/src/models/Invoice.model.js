@@ -38,10 +38,12 @@ const invoiceSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: [
-        "Pending_Buyer_Approval","Verified", "Rejected", "Pending_NOA", "Pending Admin Approval", "NOA_Verified", "Funded", "Repaid", "Cancelled"],
+        "Pending_Buyer_Approval","Verified", "Rejected", "Pending_NOA", "Pending Admin Approval", "NOA_Verified", "Funded", "Repaid", "Cancelled","Overdue"],
       default: "Pending_Buyer_Approval"
     },
-   noaDocumentUrl: {
+    repaymentAmount: { type: Number }, // What the buyer actually owes
+    penaltyAmount: { type: Number, default: 0 },
+    noaDocumentUrl: {
      type: String,
      default: null
     },
@@ -56,6 +58,11 @@ const invoiceSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+invoiceSchema.pre('save', function(next) {
+  if (this.isNew && this.totalAmount) {
+    this.repaymentAmount = this.totalAmount;
+  }
+});
 
 // ⚠️ THIS IS CRITICAL: It must export the Model, NOT a Router
 export default mongoose.model("Invoice", invoiceSchema);
