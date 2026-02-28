@@ -13,7 +13,8 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid
 } from "recharts";
 
-const API_BASE_URL = "http://localhost:5001";
+// const API_BASE_URL = "http://localhost:5001";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const PIE_COLORS = ["#0f8f79", "#47C4B7", "#f59e0b", "#e11d48", "#64748b"];
 
 const LenderDashboard = () => {

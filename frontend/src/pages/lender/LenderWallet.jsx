@@ -15,7 +15,8 @@ import {
 } from "recharts";
 import { useNavigate } from "react-router-dom";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001";
+// const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // Theme Colors for Charts
 const COLORS = ["#0f8f79", "#6366f1", "#f59e0b"]; // Teal (Available), Indigo (Deployed), Amber (Returns)

@@ -8,7 +8,8 @@ import {
   FileText, X, Building2, Calendar, IndianRupee, Gavel, FileSignature, ArrowRight
 } from "lucide-react";
 
-const API_BASE_URL = "http://localhost:5001";
+// const API_BASE_URL = "http://localhost:5001";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // ✅ ADDED: Custom PDF Viewer that securely fetches the file and stops auto-downloading
 const SafePdfViewer = ({ filePath, className, fallbackSize = 40 }) => {

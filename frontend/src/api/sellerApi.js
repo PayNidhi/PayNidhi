@@ -1,11 +1,12 @@
 // example: frontend/src/api/sellerApi.js
 import { getAuthToken } from "./tokenHelper";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+// const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const getSellerProfile = async () => {
   const token = getAuthToken();
-  const res = await fetch(`${API_BASE_URL}/seller/profile`, {
+  const res = await fetch(`${API_BASE_URL}/api/seller/profile`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
