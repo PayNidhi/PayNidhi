@@ -5,10 +5,10 @@ import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { 
-  FileText, X, Building2, Calendar, IndianRupee, Gavel, FileSignature, ArrowRight
+  FileText, X, Building2, Calendar, IndianRupee, Gavel, FileSignature, ArrowRight, ShieldCheck
 } from "lucide-react";
 
-const API_BASE_URL = "http://localhost:5001";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001";
 
 // ✅ ADDED: Custom PDF Viewer that securely fetches the file and stops auto-downloading
 const SafePdfViewer = ({ filePath, className, fallbackSize = 40 }) => {
@@ -219,7 +219,6 @@ const LenderMarketplace = () => {
                       {/* Left Side: PDF Preview */}
                       <div className="sm:w-2/5 bg-slate-100 relative border-b sm:border-b-0 sm:border-r border-slate-200 h-48 sm:h-auto overflow-hidden flex items-center justify-center">
                         
-                        {/* ✅ CHANGED: Using SafePdfViewer to stop auto-downloads */}
                         <SafePdfViewer 
                           filePath={invoice.fileUrl} 
                           className="w-full h-[150%] transform scale-75 origin-top pointer-events-none opacity-80 group-hover:opacity-100 transition-opacity border-none"
@@ -298,7 +297,6 @@ const LenderMarketplace = () => {
               </div>
               <div className="flex-1 w-full bg-slate-200/50 relative">
                 
-                {/* ✅ CHANGED: Using SafePdfViewer to stop auto-downloads */}
                 <SafePdfViewer 
                   filePath={selectedInvoice.fileUrl} 
                   className="absolute inset-0 w-full h-full border-none"
@@ -310,13 +308,24 @@ const LenderMarketplace = () => {
 
             {/* Modal Right: Details & Bidding Form */}
             <div className="w-full md:w-1/2 flex flex-col h-full max-h-[90vh]">
-              {/* Modal Header */}
+              {/* ✅ MODIFIED HEADER: Name + Trust Score + Invoice No */}
               <div className="p-5 border-b border-slate-100 flex items-start justify-between bg-white shrink-0">
-                <div>
-                  <p className="text-[10px] font-bold text-[#0f8f79] uppercase tracking-widest">{selectedInvoice.invoiceNumber}</p>
-                  <h2 className="text-lg font-bold text-slate-900 mt-1">{selectedInvoice.seller?.companyName}</h2>
+                <div className="flex-1 pr-4">
+                  <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                    <h2 className="text-lg font-bold text-slate-900">{selectedInvoice.seller?.companyName}</h2>
+                    {/* Trust Score Badge */}
+                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-100/60 shadow-sm">
+                      <ShieldCheck size={12} className="text-emerald-500" />
+                      <span className="text-[10px] font-bold text-emerald-700 tracking-wide">
+                        Score: {selectedInvoice.seller?.trustScore || 850}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                    <FileText size={12} className="text-slate-400" /> INV: {selectedInvoice.invoiceNumber}
+                  </p>
                 </div>
-                <button onClick={handleCloseModal} className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors">
+                <button onClick={handleCloseModal} className="h-8 w-8 shrink-0 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors">
                   <X size={16} />
                 </button>
               </div>

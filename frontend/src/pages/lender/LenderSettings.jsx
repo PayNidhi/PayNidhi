@@ -1,18 +1,18 @@
 import React, { useState, useRef, useCallback } from "react";
-import SellerNav from "../../components/seller/SellerNav";
-import SellerHeader from "../../components/seller/SellerHeader";
-import SellerFooter from "../../components/seller/SellerFooter";
+import LenderNav from "../../components/lender/LenderNav";
+import LenderHeader from "../../components/lender/LenderHeader";
 import { 
   Building, 
   Mail, 
   Lock, 
   Camera, 
   ShieldCheck, 
-  IndianRupee,
   Save,
   Loader2,
   Briefcase,
-  KeyRound
+  KeyRound,
+  Landmark,
+  BadgeCheck
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -20,7 +20,7 @@ import toast from "react-hot-toast";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001";
 
-const SellerSettings = () => {
+const LenderSettings = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -42,11 +42,12 @@ const SellerSettings = () => {
 
   // Form State
   const [form, setForm] = useState({
-    companyName: user?.companyName || "Global Solutions Public Limited",
-    email: user?.email || "prathameshingle72@gmail.com",
+    companyName: user?.companyName || "Capital Trust Partners",
+    email: user?.email || "treasury@capitaltrust.in",
     password: "", 
-    annualTurnover: user?.annualTurnover || "",
-    gstNumber: user?.gstNumber || "27ABCDE1234F1Z5", // Read-only
+    gstNumber: user?.gstNumber || "N/A", // Read-only
+    lenderLicense: user?.lenderLicense || "N/A", // Read-only
+    lenderType: user?.lenderType || "N/A", // Read-only
   });
 
   const [avatarFile, setAvatarFile] = useState(null);
@@ -72,6 +73,7 @@ const SellerSettings = () => {
 
     try {
       // 1. Update Profile Information
+      // Note: Backend endpoint is shared. We send annualTurnover: 0 as backend expects it for validation fallback
       const profileResponse = await fetch(`${API_BASE_URL}/api/auth/update-profile`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -79,7 +81,7 @@ const SellerSettings = () => {
         body: JSON.stringify({
           companyName: form.companyName,
           email: form.email,
-          annualTurnover: form.annualTurnover,
+          annualTurnover: 0, 
           password: form.password || undefined 
         })
       });
@@ -123,11 +125,11 @@ const SellerSettings = () => {
       <div className="fixed top-[0%] right-[-10%] w-[40%] h-[40%] bg-[#D9FAF2]/40 rounded-full blur-[120px] pointer-events-none z-0"></div>
 
       {/* Sidebar Navigation */}
-      <SellerNav
+      <LenderNav
         activeKey="settings"
         onChange={() => {}}
         isKycComplete={isKycComplete}
-        navigateToKyc={() => navigate("/seller/kyc")}
+        navigateToKyc={() => navigate("/lender/kyc")}
         isMobileOpen={isMobileOpen}
         onCloseMobile={handleCloseMobile}
       />
@@ -137,7 +139,7 @@ const SellerSettings = () => {
         
         {/* STATIC HEADER */}
         <header className="flex-none z-30">
-          <SellerHeader onLogout={handleLogout} onToggleSidebar={handleToggleSidebar} />
+          <LenderHeader onLogout={handleLogout} onToggleSidebar={handleToggleSidebar} />
         </header>
 
         {/* SCROLLABLE MAIN CONTENT AREA */}
@@ -147,10 +149,10 @@ const SellerSettings = () => {
             {/* Page Header */}
             <div className="mb-6 sm:mb-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
               <h1 className="text-xl sm:text-[26px] font-bold text-slate-900 tracking-tight">
-                Business Settings
+                Institution Settings
               </h1>
               <p className="text-[12px] sm:text-[13px] text-slate-500 font-medium mt-1.5 max-w-2xl">
-                Manage your profile, financial details, and account security to ensure smooth operations.
+                Manage your institutional profile, regulatory licenses, and treasury security protocols.
               </p>
             </div>
 
@@ -164,7 +166,7 @@ const SellerSettings = () => {
                   </div>
                   <div>
                     <h2 className="text-sm font-bold text-slate-800">Identity & Contact</h2>
-                    <p className="text-[10px] text-slate-500 font-medium mt-0.5">Public facing information</p>
+                    <p className="text-[10px] text-slate-500 font-medium mt-0.5">Marketplace facing information</p>
                   </div>
                 </div>
 
@@ -175,7 +177,7 @@ const SellerSettings = () => {
                       <div className="absolute inset-0 bg-slate-900/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none z-10"></div>
                       <img 
                         src={avatarPreview} 
-                        alt="Business Logo" 
+                        alt="Institution Logo" 
                         className="h-20 w-20 sm:h-24 sm:w-24 rounded-full object-cover border-4 border-white shadow-md bg-slate-50 transition-transform duration-300 group-hover:scale-[1.02]" 
                       />
                       <button 
@@ -188,9 +190,9 @@ const SellerSettings = () => {
                       <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleAvatarChange} />
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-slate-800">Company Logo</h3>
+                      <h3 className="text-sm font-bold text-slate-800">Institution Logo</h3>
                       <p className="text-[11px] sm:text-[12px] font-medium text-slate-500 mt-1 mb-3 max-w-sm leading-relaxed">
-                        Upload a clear, high-resolution logo to build trust with institutional lenders. (Max 2MB, JPG/PNG)
+                        Upload your official bank or fund logo to build trust with borrowers and MSMEs. (Max 2MB, JPG/PNG)
                       </p>
                       <button 
                         type="button"
@@ -206,7 +208,7 @@ const SellerSettings = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
                     <div className="space-y-1.5">
                       <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-1">
-                        Company Name
+                        Institution Name
                       </label>
                       <div className="relative group">
                         <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#0f8f79] transition-colors">
@@ -219,14 +221,14 @@ const SellerSettings = () => {
                           onChange={handleChange}
                           required
                           className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-[13px] font-semibold text-slate-800 focus:bg-white focus:border-[#47C4B7] focus:ring-4 focus:ring-[#47C4B7]/10 transition-all outline-none hover:border-slate-300"
-                          placeholder="Enter business name"
+                          placeholder="Enter institution name"
                         />
                       </div>
                     </div>
 
                     <div className="space-y-1.5">
                       <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-1">
-                        Work Email
+                        Treasury Email
                       </label>
                       <div className="relative group">
                         <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#0f8f79] transition-colors">
@@ -239,7 +241,7 @@ const SellerSettings = () => {
                           onChange={handleChange}
                           required
                           className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-[13px] font-semibold text-slate-800 focus:bg-white focus:border-[#47C4B7] focus:ring-4 focus:ring-[#47C4B7]/10 transition-all outline-none hover:border-slate-300"
-                          placeholder="finance@company.com"
+                          placeholder="treasury@institution.com"
                         />
                       </div>
                     </div>
@@ -247,34 +249,73 @@ const SellerSettings = () => {
                 </div>
               </div>
 
-              {/* --- BOX 2: Compliance & Financials --- */}
+              {/* --- BOX 2: Compliance & Licensing --- */}
               <div className="bg-white rounded-[1.5rem] border border-slate-200/60 shadow-[0_4px_20px_rgba(0,0,0,0.02)] overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
                 <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-3">
                   <div className="p-2 bg-white rounded-lg border border-slate-200 text-[#0f8f79] shadow-sm">
                     <ShieldCheck size={16} />
                   </div>
                   <div>
-                    <h2 className="text-sm font-bold text-slate-800">Compliance & Financials</h2>
-                    <p className="text-[10px] text-slate-500 font-medium mt-0.5">Regulatory and scale metrics</p>
+                    <h2 className="text-sm font-bold text-slate-800">Compliance & Licensing</h2>
+                    <p className="text-[10px] text-slate-500 font-medium mt-0.5">Regulatory framework details</p>
                   </div>
                 </div>
 
                 <div className="p-6 sm:p-8">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
                     
-                    {/* GST Number (Locked) */}
-                    <div className="space-y-1.5">
+                    {/* RBI License Number (Locked) */}
+                    <div className="space-y-1.5 md:col-span-2">
                       <div className="flex items-center justify-between pl-1">
                         <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                          GST Number
+                          RBI License / Registration No.
                         </label>
-                        <span className="flex items-center gap-1 text-[8px] text-amber-600 bg-amber-50 border border-amber-200/80 px-1.5 py-[2px] rounded uppercase tracking-widest font-bold">
-                          <Lock size={10} /> Verified
+                        <span className="flex items-center gap-1 text-[8px] text-emerald-600 bg-emerald-50 border border-emerald-200/80 px-1.5 py-[2px] rounded uppercase tracking-widest font-bold">
+                          <ShieldCheck size={10} /> Verified
                         </span>
                       </div>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                          <ShieldCheck size={16} />
+                          <Landmark size={16} />
+                        </div>
+                        <input
+                          type="text"
+                          name="lenderLicense"
+                          value={form.lenderLicense}
+                          disabled
+                          className="w-full pl-10 pr-4 py-3 bg-slate-100/60 border border-slate-200 rounded-xl text-[13px] font-bold text-slate-500 outline-none cursor-not-allowed uppercase tracking-wider"
+                        />
+                      </div>
+                      <p className="text-[10px] font-medium text-slate-400 mt-1 pl-1">License is cross-verified with the central regulatory database.</p>
+                    </div>
+
+                    {/* Provider Type (Locked) */}
+                    <div className="space-y-1.5">
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-1">
+                        Provider Entity Type
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                          <BadgeCheck size={16} />
+                        </div>
+                        <input
+                          type="text"
+                          name="lenderType"
+                          value={form.lenderType}
+                          disabled
+                          className="w-full pl-10 pr-4 py-3 bg-slate-100/60 border border-slate-200 rounded-xl text-[13px] font-bold text-slate-500 outline-none cursor-not-allowed uppercase tracking-wider"
+                        />
+                      </div>
+                    </div>
+
+                    {/* GST Number (Locked) */}
+                    <div className="space-y-1.5">
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-1">
+                        GSTIN Number
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                          <Lock size={16} />
                         </div>
                         <input
                           type="text"
@@ -282,26 +323,6 @@ const SellerSettings = () => {
                           value={form.gstNumber}
                           disabled
                           className="w-full pl-10 pr-4 py-3 bg-slate-100/60 border border-slate-200 rounded-xl text-[13px] font-bold text-slate-500 outline-none cursor-not-allowed uppercase tracking-wider"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Annual Turnover */}
-                    <div className="space-y-1.5">
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-1">
-                        Annual Turnover
-                      </label>
-                      <div className="relative group">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#0f8f79] font-bold text-sm transition-colors">
-                          ₹
-                        </div>
-                        <input
-                          type="number"
-                          name="annualTurnover"
-                          value={form.annualTurnover}
-                          onChange={handleChange}
-                          className="w-full pl-8 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-[13px] font-semibold text-slate-800 focus:bg-white focus:border-[#47C4B7] focus:ring-4 focus:ring-[#47C4B7]/10 transition-all outline-none hover:border-slate-300"
-                          placeholder="Enter turnover amount"
                         />
                       </div>
                     </div>
@@ -363,11 +384,6 @@ const SellerSettings = () => {
           </div>
         </main>
         
-        {/* STATIC FOOTER */}
-        <div className="flex-none hidden lg:block bg-white border-t border-slate-200 z-20">
-          <SellerFooter />
-        </div>
-
       </div>
 
       {/* Global Styles */}
@@ -386,4 +402,4 @@ const SellerSettings = () => {
   );
 };
 
-export default SellerSettings;
+export default LenderSettings;

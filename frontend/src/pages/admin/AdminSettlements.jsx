@@ -1,10 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-    Calculator, Zap, Scale, Info,
-    ArrowRightLeft, Landmark, History,
-    CreditCard, Plus, Edit, Trash2, Banknote,
-    Clock, Calendar
-} from 'lucide-react';
+import { Calculator, History } from 'lucide-react';
 import { PremiumTable } from '../../components/admin/exports';
 import { getFinances, settleInvoice } from '../../api/adminApi';
 import toast from 'react-hot-toast';
@@ -18,7 +13,6 @@ const AdminSettlements = () => {
         try {
             setLoading(true);
             const res = await getFinances();
-            // Show only active loans for settlement
             setData(res.data.finances?.filter(f => !f.isSettled) || []);
         } catch (error) {
             toast.error("Failed to fetch loan book");
@@ -33,7 +27,7 @@ const AdminSettlements = () => {
 
     const handleSettle = async (invoiceId) => {
         const toastId = toast.loading('Executing Money Split Protocol...', {
-            style: { borderRadius: '15px', background: '#333', color: '#fff' }
+            style: { borderRadius: '12px', background: '#1e293b', color: '#fff', fontSize: '12px', fontWeight: 'bold' }
         });
         try {
             await settleInvoice(invoiceId);
@@ -54,14 +48,14 @@ const AdminSettlements = () => {
         {
             header: "MARKET PARTICIPANTS",
             render: (row) => (
-                <div className="flex flex-col gap-1.5 items-center">
+                <div className="flex flex-col gap-1.5 items-start min-w-[180px]">
                     <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-amber-400"></div>
-                        <span className="text-[11px] font-bold text-slate-700 uppercase tracking-tight">{row.seller?.companyName}</span>
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400"></div>
+                        <span className="text-[10px] sm:text-[11px] font-bold text-slate-700 uppercase tracking-tight truncate">{row.seller?.companyName}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
-                        <span className="text-[11px] font-bold text-slate-700 uppercase tracking-tight">{row.lender?.companyName}</span>
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#0f8f79]"></div>
+                        <span className="text-[10px] sm:text-[11px] font-bold text-slate-700 uppercase tracking-tight truncate">{row.lender?.companyName}</span>
                     </div>
                 </div>
             )
@@ -69,19 +63,19 @@ const AdminSettlements = () => {
         {
             header: "PRINCIPAL DEPLOYED",
             render: (row) => (
-                <span className="text-sm font-bold text-slate-800">₹{row.loanAmount?.toLocaleString()}</span>
+                <span className="text-xs sm:text-sm font-black text-slate-800 whitespace-nowrap">₹{row.loanAmount?.toLocaleString()}</span>
             )
         },
         {
             header: "REPAYMENT VALUE",
             render: (row) => (
-                <span className="text-sm font-bold text-emerald-600 italic">₹{row.bid?.repaymentAmount?.toLocaleString()}</span>
+                <span className="text-xs sm:text-sm font-black text-[#0f8f79] italic whitespace-nowrap">₹{row.bid?.repaymentAmount?.toLocaleString()}</span>
             )
         },
         {
             header: "ASSET STATUS",
             render: (row) => (
-                <span className="px-3 py-1 bg-[#47C4B7]/10 border border-[#47C4B7]/20 rounded-lg text-[10px] font-bold text-[#47C4B7] uppercase tracking-widest">
+                <span className="px-2.5 py-1 bg-[#F3FBF9] border border-[#7FE0CC]/50 rounded-md text-[8px] sm:text-[9px] font-bold text-[#0f8f79] uppercase tracking-widest whitespace-nowrap shadow-sm">
                     Escrow Live
                 </span>
             )
@@ -89,7 +83,7 @@ const AdminSettlements = () => {
         {
             header: "TIMESTAMP",
             render: (row) => (
-                <span className="text-xs font-medium text-slate-400">
+                <span className="text-[10px] sm:text-xs font-medium text-slate-500 whitespace-nowrap">
                     {new Date(row.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
                 </span>
             )
@@ -98,13 +92,13 @@ const AdminSettlements = () => {
             header: "SPLIT EXECUTION",
             align: "right",
             render: (row) => (
-                <div className="flex items-center justify-end gap-2 px-2">
-                    <button className="p-2 text-slate-400 hover:text-indigo-600 rounded-xl transition-all">
-                        <History size={18} />
+                <div className="flex items-center justify-end gap-2">
+                    <button className="w-8 h-8 flex items-center justify-center bg-slate-50 border border-slate-200 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-100 rounded-xl transition-all active:scale-95 shadow-sm">
+                        <History size={14} />
                     </button>
                     <button
                         onClick={() => handleSettle(row.invoice?._id)}
-                        className="px-6 py-2.5 bg-slate-900 hover:bg-[#47C4B7] text-white text-[10px] font-bold rounded-xl shadow-lg transition-all uppercase tracking-[0.2em] ml-2"
+                        className="px-4 sm:px-6 py-2 bg-slate-900 hover:bg-[#0f8f79] text-white text-[9px] sm:text-[10px] font-black rounded-xl shadow-md hover:shadow-lg shadow-[#0f8f79]/20 transition-all uppercase tracking-[0.1em] whitespace-nowrap active:scale-95"
                     >
                         Execute Split
                     </button>
@@ -114,7 +108,7 @@ const AdminSettlements = () => {
     ];
 
     return (
-        <div className="w-full pb-20">
+        <div className="w-full pb-24 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 max-w-[1600px] mx-auto">
             <PremiumTable
                 title="Settlement Hub"
                 subtitle="Real-time fund reconciliation and escrow distribution protocols."
