@@ -11,6 +11,9 @@ import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import OtpVerifyCard from "./components/auth/OtpVerifyCard";
+import ContactPage from "./pages/ContactPage";
+import TermsAndConditions from "./pages/TermsAndConditions";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 import SellerDashboard from "./pages/seller/SellerDashboard";
 import SellerOnboarding from "./pages/seller/SellerOnboarding";
@@ -56,6 +59,11 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+
+
 
         {/* Seller protected area */}
         <Route element={<ProtectedRoute allowedRoles={["seller"]} />}>
