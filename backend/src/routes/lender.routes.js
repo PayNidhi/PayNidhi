@@ -1,23 +1,34 @@
 import { Router } from "express";
-import { getMarketplace, placeBid, getMyBids,getWalletDetails } from "../controllers/lender.controller.js";
+import { 
+  getDashboardSummary, // 👈 ADDED HERE
+  getMarketplace, 
+  placeBid, 
+  getMyBids,
+  getWalletDetails,
+  requestWithdrawal 
+} from "../controllers/lender.controller.js";
 import { protect, authorize } from "../middleware/auth.middleware.js";
 import { lenderKycVerification } from "../controllers/kyc.controller.js";
 
 const router = Router();
 
-// 1. Dashboard (Feed)
+// 1. Dashboard (Summary)  👈 ADDED THIS ROUTE HERE
+router.get("/dashboard-summary", protect, authorize("lender"), getDashboardSummary);
+
+// 2. Dashboard (Feed)
 router.get("/marketplace", protect, authorize("lender"), getMarketplace);
 
-// 4. KYC
+// 3. KYC
 router.post("/kyc-verification", protect, authorize("lender"), lenderKycVerification);
 
-// 2. Place a Bid
+// 4. Place a Bid
 router.post("/bid/:invoiceId", protect, authorize("lender"), placeBid);
 
-// 3. Get My Bids (For LenderBidsPage)
+// 5. Get My Bids (For LenderBidsPage)
 router.get("/my-bids", protect, authorize("lender"), getMyBids);
 
-
+// 6. Wallet Endpoints
 router.get("/wallet", protect, authorize("lender"), getWalletDetails);
+router.post("/withdraw", protect, requestWithdrawal);
 
 export default router;
