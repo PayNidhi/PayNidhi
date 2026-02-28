@@ -8,6 +8,7 @@ import { sendOtpEmail } from "../utils/email.utils.js";
 import Transaction from "../models/Transaction.model.js";
 import Finance from "../models/Finance.model.js";
 import Bid from "../models/Bid.model.js";
+import { runSettlementCheck } from "../utils/settlementEngine.js";
 
 // 🛡️ Admin tokens expire in 1 day (Strict Security)
 const generateAdminToken = (id, role) => {
@@ -399,6 +400,10 @@ export const getPendingNOAInvoices = async (req, res) => {
   }
 };
 
+// Make sure to add these imports at the top if you haven't already:
+// import Admin from "../models/Admin.model.js";
+// import { updateSellerTrustScore } from "../utils/creditScore.utils.js";
+
 export const processBuyerRepayment = async (req, res) => {
   try {
     const { id } = req.params;
@@ -407,25 +412,41 @@ export const processBuyerRepayment = async (req, res) => {
     if (!invoice) return res.status(404).json({ error: "Invoice not found." });
 
     console.log("invoice found")
-    if (invoice.status !== "Funded") {
-      return res.status(400).json({ error: "Only 'Funded' invoices can be settled." });
+    
+    // 👇 ADDED: Allow 'Overdue' invoices to pass through
+    if (invoice.status !== "Funded" && invoice.status !== "Overdue") {
+      return res.status(400).json({ error: "Only 'Funded' or 'Overdue' invoices can be settled." });
     }
 
     const winningBid = await Bid.findOne({ invoice: id, status: "Funded" });
     if (!winningBid) return res.status(404).json({ error: "Winning bid not found." });
     console.log("winning bid found")
+    
     const buyerPayment = invoice.totalAmount;
     const lenderPrincipal = winningBid.loanAmount;
     const platformFee = Math.ceil(lenderPrincipal * 0.02);
-    const lenderTotalReturn = lenderPrincipal - platformFee;
+    
+    // 👇 ADDED: Fetch penalty (will be 0 if paid on time)
+    const penaltyAmount = invoice.penaltyAmount || 0;
+    
+    // 👇 MODIFIED: Add penalty to the lender's total return
+    const lenderTotalReturn = (lenderPrincipal - platformFee) + penaltyAmount;
+    
+    // (Your existing math here automatically deducts the penalty from the seller because lenderTotalReturn is now higher)
     const sellerRemainingBalance = buyerPayment - lenderTotalReturn - platformFee;
     console.log(sellerRemainingBalance)
+    
     await Lender.findByIdAndUpdate(winningBid.lender, {
       $inc: { walletBalance: lenderTotalReturn }
     });
 
     await Seller.findByIdAndUpdate(invoice.seller, {
       $inc: { walletBalance: sellerRemainingBalance }
+    });
+
+    // 👇 ADDED: Update Admin wallet with the platform fee
+    await Admin.findOneAndUpdate({}, {
+      $inc: { walletBalance: platformFee }
     });
 
     await Transaction.insertMany([
@@ -460,6 +481,9 @@ export const processBuyerRepayment = async (req, res) => {
     winningBid.status = "Repaid";
     await winningBid.save();
 
+    // 👇 ADDED: Trigger Trust Score update since the invoice is now repaid
+    await updateSellerTrustScore(invoice.seller);
+
     res.status(200).json({
       success: true,
       message: "Buyer payment simulated and funds settled successfully.",
@@ -467,6 +491,7 @@ export const processBuyerRepayment = async (req, res) => {
         buyerPaid: buyerPayment,
         lenderReceived: lenderTotalReturn,
         platformFee,
+        penaltyApplied: penaltyAmount, // 👇 ADDED: Expose penalty in response for UI
         sellerReceived: sellerRemainingBalance
       }
     });
@@ -474,5 +499,14 @@ export const processBuyerRepayment = async (req, res) => {
   } catch (error) {
     console.error("Settlement Engine Error:", error);
     res.status(500).json({ error: "Failed to process settlement." });
+  }
+};
+export const triggerManualSettlement = async (req, res) => {
+  try {
+      const result = await runSettlementCheck();
+      res.status(200).json({ success: true, result });
+  } catch (error) {
+      console.error("Manual Trigger Error:", error);
+      res.status(500).json({ success: false, error: error.message });
   }
 };
