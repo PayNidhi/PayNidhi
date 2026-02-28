@@ -14,7 +14,8 @@ import {
   getAllTransactionsAdmin,
   getAllFinancesAdmin,
   getAllInvoicesAdmin,
-  processBuyerRepayment
+  processBuyerRepayment,
+  triggerManualSettlement
 } from "../controllers/admin.controller.js";
 
 const router = express.Router();
@@ -25,9 +26,13 @@ const router = express.Router();
 // Hit this route ONCE from your browser to save the admin to MongoDB
 router.get("/create-master-admin", async (req, res) => {
   try {
-    const adminExists = await Admin.findOne({ email: "ingleprathamesh34@gmail.com" });
+    const adminExists = await Admin.findOne({
+      email: "ingleprathamesh34@gmail.com",
+    });
     if (adminExists) {
-      return res.json({ message: "Admin already exists in the database! You can go log in." });
+      return res.json({
+        message: "Admin already exists in the database! You can go log in.",
+      });
     }
 
     // This creates the admin and triggers the password hash in your model
@@ -35,12 +40,13 @@ router.get("/create-master-admin", async (req, res) => {
       name: "Master Admin",
       email: "ingleprathamesh34@gmail.com",
       password: "Admin@123",
-      role: "superadmin"
+      role: "superadmin",
     });
 
     res.json({
       success: true,
-      message: "Master Admin created successfully! Go to your frontend and log in."
+      message:
+        "Master Admin created successfully! Go to your frontend and log in.",
     });
   } catch (error) {
     console.error("Setup Error:", error);
@@ -68,5 +74,6 @@ router.get("/transactions", getAllTransactionsAdmin);
 router.get("/finances", getAllFinancesAdmin);
 router.get("/ledger", getAllInvoicesAdmin);
 router.post("/:id/process-repayment", processBuyerRepayment);
+router.post("/trigger-settlement",triggerManualSettlement);
 
 export default router;

@@ -560,137 +560,98 @@ const SellerInvoices = () => {
                   </div>
 
                   <div className="space-y-4">
-                    {loadingBids ? (
-                      <div className="flex flex-col justify-center items-center py-12">
-                        <Loader2 size={24} className="animate-spin text-slate-300 mb-2" />
-                        <p className="text-xs text-slate-400">Loading secure offers...</p>
-                      </div>
-                    ) : activeBids.length === 0 ? (
-                      <div className="text-center py-12 bg-white rounded-xl border border-dashed border-slate-200">
-                        <p className="text-sm font-medium text-slate-600">No lenders have placed a bid yet.</p>
-                        <p className="text-[11px] text-slate-400 mt-1">Please check back later.</p>
-                      </div>
-                    ) : (
-                      activeBids.map((bid) => (
-                        <div key={bid._id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all relative overflow-hidden group">
-                          
-                          {/* Accent line for accepted bids */}
-                          {bid.status === "Accepted" && <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500" />}
-                          
-                          <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-4">
-                            
+                   {loadingBids ? (
+  <div className="flex flex-col justify-center items-center py-12">
+    <Loader2 size={24} className="animate-spin text-slate-300 mb-2" />
+    <p className="text-xs text-slate-400">Loading secure offers...</p>
+  </div>
+) : activeBids.length === 0 ? (
+  <div className="text-center py-12 bg-white rounded-xl border border-dashed border-slate-200">
+    <p className="text-sm font-medium text-slate-600">No lenders have placed a bid yet.</p>
+    <p className="text-[11px] text-slate-400 mt-1">Please check back later.</p>
+  </div>
+) : (
+  // 👇 1. ADD THIS LINE BEFORE THE MAP: Check if ANY bid is already accepted
+  (() => {
+    const isAnyBidAccepted = activeBids.some(b => ["Accepted", "Funded", "Repaid"].includes(b.status));
+    
+    return activeBids.map((bid) => (
+      <div key={bid._id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all relative overflow-hidden group">
+        
+        {/* Accent line for accepted bids */}
+        {["Accepted", "Funded", "Repaid"].includes(bid.status) && <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500" />}
+        
+        <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-4">
+          
+          {/* Offer Details Grid (Keep your existing grid code here) */}
+          <div className="flex items-center gap-4 bg-slate-50 px-4 py-2.5 rounded-lg border border-slate-100 shrink-0">
+            <div>
+              <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Financial Partner</p>
+              <button 
+                onClick={() => toggleBidExpansion(bid._id)}
+                className="text-slate-50 hover:text-slate-50 bg-slate-800 hover:bg-emerald-600 p-1 rounded-md transition-colors flex items-center gap-1"
+                title="View Lender Details"
+              >
+                <Info size={13} />
+                <span className="text-[9px] font-bold uppercase tracking-wider">{expandedBidId === bid._id ? 'Hide' : 'Info'}</span>
+              </button>
+            </div>
+            <div>
+              <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Offer Amount</p>
+              <p className="text-sm font-bold text-slate-900">{formatCurrency(bid.loanAmount)}</p>
+            </div>
+            <div className="w-px h-6 bg-slate-200" />
+            <div>
+              <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Monthly Rate</p>
+              <p className="text-sm font-bold text-indigo-600">{bid.interestRate}%</p>
+            </div>
+          </div>
 
-                            {/* Offer Details Grid */}
-                            <div className="flex items-center gap-4 bg-slate-50 px-4 py-2.5 rounded-lg border border-slate-100 shrink-0">
-                              <div>
-                                <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Financial Partner</p>
-                                <button 
-                                  onClick={() => toggleBidExpansion(bid._id)}
-                                  className="text-slate-50 hover:text-slate-50 bg-slate-800 hover:bg-emerald-600 p-1 rounded-md transition-colors flex items-center gap-1"
-                                  title="View Lender Details"
-                                >
-                                  <Info size={13} />
-                                  <span className="text-[9px] font-bold uppercase tracking-wider">{expandedBidId === bid._id ? 'Hide' : 'Info'}</span>
-                                </button>
-                              </div>
-                              <div>
-                                <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Offer Amount</p>
-                                <p className="text-sm font-bold text-slate-900">{formatCurrency(bid.loanAmount)}</p>
-                              </div>
-                              <div className="w-px h-6 bg-slate-200" />
-                              <div>
-                                <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Monthly Rate</p>
-                                <p className="text-sm font-bold text-indigo-600">{bid.interestRate}%</p>
-                              </div>
-                            </div>
+          {/* 👇 2. UPDATED ACCEPT/REJECT BUTTONS LOGIC */}
+          <div className="flex flex-col gap-2 shrink-0 lg:w-28 mt-1 xl:mt-0">
+            {["Accepted", "Funded", "Repaid"].includes(bid.status) ? (
+              // This is the winning bid
+              <div className="w-full py-2 bg-emerald-50 text-emerald-700 rounded-lg flex items-center justify-center gap-1.5 border border-emerald-100 text-[10px] font-bold">
+                <ShieldCheck size={14} /> Deal Won
+              </div>
+            ) : isAnyBidAccepted || selectedInvoice.status === "Financed" ? (
+              // Another bid won, so this one is locked out
+              <div className="w-full py-2 bg-slate-50 text-slate-400 rounded-lg flex items-center justify-center text-[10px] font-bold border border-slate-100">
+                Closed
+              </div>
+            ) : (
+              // No bid has been accepted yet, show action buttons
+              <>
+                <button 
+                  disabled={processingId !== null || isAnyBidAccepted}
+                  onClick={() => handleBidAction(bid._id, "Accepted")}
+                  className="w-full py-2 bg-slate-900 hover:bg-emerald-600 text-white rounded-lg text-[10px] font-semibold transition-colors flex justify-center items-center gap-1.5 disabled:opacity-50 shadow-sm"
+                >
+                  {processingId === bid._id ? <Loader2 size={12} className="animate-spin"/> : <CheckCircle2 size={12}/>}
+                  Accept
+                </button>
+                <button 
+                  disabled={processingId !== null}
+                  onClick={() => handleBidAction(bid._id, "Rejected")}
+                  className="w-full py-2 bg-white border border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200 rounded-lg text-[10px] font-semibold transition-colors flex justify-center items-center gap-1.5 disabled:opacity-50"
+                >
+                  <XCircle size={12}/> Reject
+                </button>
+              </>
+            )}
+          </div>
 
-                            {/* Accept / Reject Buttons */}
-                            <div className="flex flex-col gap-2 shrink-0 lg:w-28 mt-1 xl:mt-0">
-                              {selectedInvoice.status === "Financed" ? (
-                                bid.status === "Accepted" ? (
-                                  <div className="w-full py-2 bg-emerald-50 text-emerald-700 rounded-lg flex items-center justify-center gap-1.5 border border-emerald-100 text-[10px] font-bold">
-                                    <ShieldCheck size={14} /> Deal Won
-                                  </div>
-                                ) : (
-                                  <div className="w-full py-2 bg-slate-50 text-slate-400 rounded-lg flex items-center justify-center text-[10px] font-bold border border-slate-100">
-                                    Closed
-                                  </div>
-                                )
-                              ) : (
-                                <>
-                                  <button 
-                                    disabled={processingId !== null}
-                                    onClick={() => handleBidAction(bid._id, "Accepted")}
-                                    className="w-full py-2 bg-slate-900 hover:bg-emerald-600 text-white rounded-lg text-[10px] font-semibold transition-colors flex justify-center items-center gap-1.5 disabled:opacity-50 shadow-sm"
-                                  >
-                                    {processingId === bid._id ? <Loader2 size={12} className="animate-spin"/> : <CheckCircle2 size={12}/>}
-                                    Accept
-                                  </button>
-                                  <button 
-                                    disabled={processingId !== null}
-                                    onClick={() => handleBidAction(bid._id, "Rejected")}
-                                    className="w-full py-2 bg-white border border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200 rounded-lg text-[10px] font-semibold transition-colors flex justify-center items-center gap-1.5 disabled:opacity-50"
-                                  >
-                                    <XCircle size={12}/> Reject
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                          </div>
+        </div>
 
-                          {/* ✅ EXPANDABLE LENDER PROFILE SECTION */}
-                          <AnimatePresence>
-                            {expandedBidId === bid._id && (
-                              <motion.div 
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: "auto" }}
-                                exit={{ opacity: 0, height: 0 }}
-                                className="overflow-hidden"
-                              >
-                                <div className="pt-4 pb-1 border-t border-slate-100 mt-4">
-                                  <h5 className="text-[10px] font-bold text-slate-800 uppercase tracking-widest mb-3">Verified Lender Profile</h5>
-                                  <div className="grid grid-cols-2 gap-3">
-                                    
-                                    {/* 1. Entity Type */}
-                                    <div className="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100/50">
-                                      <p className="text-[9px] text-indigo-400 font-bold uppercase tracking-widest mb-1">Entity Type</p>
-                                      <p className="text-xs font-semibold text-indigo-900">{bid.lender?.lenderType || "Institutional Investor"}</p>
-                                    </div>
-                                    
-                                    {/* 2. Platform Status */}
-                                    <div className="bg-emerald-50/50 p-3 rounded-xl border border-emerald-100/50 flex items-center gap-3">
-                                      <ShieldCheck size={20} className="text-emerald-500 shrink-0" />
-                                      <div className="min-w-0">
-                                        <p className="text-[9px] text-emerald-600/70 font-bold uppercase tracking-widest mb-0.5 truncate">Platform Status</p>
-                                        <p className="text-xs font-semibold text-emerald-700 truncate">KYC Verified</p>
-                                      </div>
-                                    </div>
-                                    
-                                    {/* 3. Regulatory License */}
-                                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                      <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-1">Regulator License</p>
-                                      <p className="text-xs font-semibold text-slate-700 font-mono truncate">
-                                        {bid.lender?.lenderLicense ? `Verified: ${bid.lender.lenderLicense.substring(0, 4)}***` : "Platform Compliant"}
-                                      </p>
-                                    </div>
-                                    
-                                    {/* 4. Official Contact */}
-                                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                      <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-1">Registered Contact</p>
-                                      <p className="text-xs font-semibold text-slate-700 truncate">
-                                        {bid.lender?.email ? bid.lender.email.replace(/(.{2})(.*)(?=@)/, "$1***") : "Verified Contact"}
-                                      </p>
-                                    </div>
-                                    
-                                  </div>
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
+        {/* ✅ EXPANDABLE LENDER PROFILE SECTION (Keep your existing code here) */}
+        <AnimatePresence>
+          {/* ... existing expandable profile code ... */}
+        </AnimatePresence>
 
-                        </div>
-                      ))
-                    )}
+      </div>
+    ));
+  })()
+)}
                   </div>
                 </div>
 

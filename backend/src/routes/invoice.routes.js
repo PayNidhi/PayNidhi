@@ -9,7 +9,7 @@ import {
   verifyInvoice
 } from "../controllers/invoice.controller.js"; // 👈 Imports logic from Controller
 import { protect, authorize } from "../middleware/auth.middleware.js";
-
+import { runSettlementCheck } from "../utils/settlementEngine.js";
 const router = Router();
 
 // Configure Multer (Temporary storage for uploads)
@@ -64,5 +64,14 @@ router.get(
   "/verify-invoice",
   verifyInvoice
 )
+
+router.post("/trigger-settlement", async (req, res) => {
+    try {
+        const result = await runSettlementCheck();
+        res.status(200).json({ success: true, result });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
 
 export default router;
