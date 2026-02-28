@@ -16,7 +16,8 @@ import {
 import LenderNav from "../../components/lender/LenderNav";
 import LenderHeader from "../../components/lender/LenderHeader";
 
-const API_BASE_URL = "http://localhost:5001";
+// const API_BASE_URL = "http://localhost:5001";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const LenderKyc = () => {
   const [step, setStep] = useState(1);

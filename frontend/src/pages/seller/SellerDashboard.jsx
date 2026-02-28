@@ -15,7 +15,9 @@ import {
 } from "recharts";
 import { motion } from "framer-motion";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001";
+// const API_BASE_URL = "http://localhost:5001";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const PIE_COLORS = ["#4f46e5", "#0ea5e9", "#22c55e", "#e11d48", "#f59e0b"];
 
 const SCAN_STEPS = [
   "Initializing AI Vision Engine...",

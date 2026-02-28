@@ -7,7 +7,8 @@ import { getPendingNOAs, verifyNOA } from '../../api/adminApi';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const API_BACKEND_URL = "http://localhost:5001"; 
+// const API_BACKEND_URL = "http://localhost:5001"; 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // 📄 Secure PDF Viewer Component
 const SecureAdminPdfViewer = ({ filePath }) => {

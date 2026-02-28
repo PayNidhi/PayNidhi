@@ -13,26 +13,9 @@ import {
 } from "recharts";
 import { motion } from "framer-motion";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001";
-
-// --- Time-based Greeting Helper for Toast ---
-const getGreeting = () => {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good Morning";
-  if (hour < 18) return "Good Afternoon";
-  return "Good Evening";
-};
-
-// --- Animation Variants ---
-const containerVariants = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.1 } }
-};
-
-const cardVariants = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
-};
+// const API_BASE_URL = "http://localhost:5001";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const PIE_COLORS = ["#0f8f79", "#47C4B7", "#f59e0b", "#e11d48", "#64748b"];
 
 const LenderDashboard = () => {
   const [activeKey, setActiveKey] = useState("overview");
