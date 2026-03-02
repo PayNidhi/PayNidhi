@@ -21,6 +21,9 @@ import autoTable from "jspdf-autotable";
 // const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+// --- FIXED: Added missing COLORS definition ---
+const COLORS = ["#0f8f79", "#47C4B7", "#6366f1"];
+
 const containerVariants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.1 } }
@@ -251,7 +254,7 @@ const LenderWallet = () => {
   const totalPortfolio = (walletData.balance || 0) + walletData.utilizedLimit;
 
   const pieData = [
-    { name: "Liquid Balance", value: walletData.balance || 1 },
+    { name: "Liquid Balance", value: walletData.balance || 0 },
     { name: "Deployed Capital", value: walletData.utilizedLimit || 0 },
     { name: "Earned Returns", value: totalReturns } 
   ];
@@ -487,7 +490,6 @@ const LenderWallet = () => {
                     </table>
                   </div>
 
-                  {/* Pagination */}
                   {walletData.transactions.length > itemsPerPage && (
                     <div className="flex items-center justify-end mt-6 gap-2 border-t border-slate-100 pt-4">
                       <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="p-2 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 transition-all disabled:opacity-30">
@@ -507,7 +509,6 @@ const LenderWallet = () => {
         </main>
       </div>
 
-      {/* 💳 PROFESSIONAL RAZORPAY-STYLE WITHDRAWAL DIALOG */}
       <AnimatePresence>
         {isWithdrawOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
@@ -530,7 +531,6 @@ const LenderWallet = () => {
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               className="relative w-full max-w-[380px] z-10"
             >
-              {/* Floating Notification (Razorpay Style) */}
               <AnimatePresence>
                 {withdrawStep === "processing" && (
                   <motion.div

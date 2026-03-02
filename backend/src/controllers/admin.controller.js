@@ -9,7 +9,7 @@ import Transaction from "../models/Transaction.model.js";
 import Finance from "../models/Finance.model.js";
 import Bid from "../models/Bid.model.js";
 import { runSettlementCheck } from "../utils/settlementEngine.js";
-
+import { updateSellerTrustScore } from "../utils/creditScore.utils.js";
 // 🛡️ Admin tokens expire in 1 day (Strict Security)
 const generateAdminToken = (id, role) => {
   return jwt.sign({ id, role }, process.env.JWT_SECRET, {
@@ -30,7 +30,8 @@ const sendAdminCookie = (res, token) => {
 // ==========================================
 // 🔓 ADMIN LOGIN (Hidden Endpoint)
 // ==========================================
-const generateOtpCode = () => Math.floor(100000 + Math.random() * 900000).toString();
+const generateOtpCode = () =>
+  Math.floor(100000 + Math.random() * 900000).toString();
 
 // ==========================================
 // 🔓 STEP 1: ADMIN LOGIN
@@ -40,14 +41,15 @@ export const loginAdmin = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ error: "Email and password are required." });
+      return res
+        .status(400)
+        .json({ error: "Email and password are required." });
     }
 
     const admin = await Admin.findOne({ email });
 
     // 1. Check Password
     if (admin && (await admin.matchPassword(password))) {
-
       // 2. Generate and Send OTP
       const code = generateOtpCode();
       const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 mins
@@ -62,9 +64,8 @@ export const loginAdmin = async (req, res) => {
 
       return res.status(200).json({
         message: "Password verified. OTP sent to admin email.",
-        email: admin.email
+        email: admin.email,
       });
-
     } else {
       console.log("⚠️ Failed Admin login attempt detected.");
       return res.status(401).json({ error: "Invalid Admin Credentials." });
@@ -83,14 +84,23 @@ export const verifyAdminLogin = async (req, res) => {
     const { email, code } = req.body;
 
     if (!email || !code) {
-      return res.status(400).json({ error: "Email and OTP code are required." });
+      return res
+        .status(400)
+        .json({ error: "Email and OTP code are required." });
     }
 
     // 1. Verify OTP
-    const otpDoc = await Otp.findOne({ email, code, purpose: "admin_login", verified: false });
+    const otpDoc = await Otp.findOne({
+      email,
+      code,
+      purpose: "admin_login",
+      verified: false,
+    });
 
-    if (!otpDoc) return res.status(400).json({ error: "Invalid or expired OTP." });
-    if (otpDoc.expiresAt < new Date()) return res.status(400).json({ error: "OTP has expired." });
+    if (!otpDoc)
+      return res.status(400).json({ error: "Invalid or expired OTP." });
+    if (otpDoc.expiresAt < new Date())
+      return res.status(400).json({ error: "OTP has expired." });
 
     otpDoc.verified = true;
     await otpDoc.save();
@@ -109,7 +119,6 @@ export const verifyAdminLogin = async (req, res) => {
       role: admin.role,
       message: "God-Mode Activated. Welcome to PayNidhi Command Center.",
     });
-
   } catch (error) {
     console.error("Admin OTP Verification Error:", error);
     res.status(500).json({ error: "Internal Server Error." });
@@ -127,7 +136,7 @@ export const getAllSellers = async (req, res) => {
 
     res.status(200).json({
       totalSellers: sellers.length,
-      sellers
+      sellers,
     });
   } catch (error) {
     console.error("Fetch Sellers Error:", error);
@@ -146,7 +155,7 @@ export const getAllLenders = async (req, res) => {
 
     res.status(200).json({
       totalLenders: lenders.length,
-      lenders
+      lenders,
     });
   } catch (error) {
     console.error("Fetch Lenders Error:", error);
@@ -165,7 +174,7 @@ export const getAllInvoicesAdmin = async (req, res) => {
 
     res.status(200).json({
       totalInvoices: invoices.length,
-      invoices
+      invoices,
     });
   } catch (error) {
     console.error("Fetch Invoices Error:", error);
@@ -186,17 +195,17 @@ export const getPlatformStats = async (req, res) => {
       gmvResult,
       pendingKyc,
       pendingWithdrawals,
-      recentLedger
+      recentLedger,
     ] = await Promise.all([
       Seller.countDocuments({ isActive: true }),
       Lender.countDocuments({ isActive: true }),
       Finance.countDocuments({ isSettled: false }),
       Transaction.aggregate([
         { $match: { type: "PLATFORM_FEE", status: "SUCCESS" } },
-        { $group: { _id: null, total: { $sum: "$amount" } } }
+        { $group: { _id: null, total: { $sum: "$amount" } } },
       ]),
       Finance.aggregate([
-        { $group: { _id: null, total: { $sum: "$loanAmount" } } }
+        { $group: { _id: null, total: { $sum: "$loanAmount" } } },
       ]),
       Seller.find({ kycStatus: "Pending" })
         .select("companyName email createdAt")
@@ -207,9 +216,7 @@ export const getPlatformStats = async (req, res) => {
         .select("amount referenceId createdAt seller")
         .sort({ createdAt: 1 })
         .limit(5),
-      Transaction.find()
-        .sort({ createdAt: -1 })
-        .limit(5)
+      Transaction.find().sort({ createdAt: -1 }).limit(5),
     ]);
 
     const totalRevenue = revenueResult.length > 0 ? revenueResult[0].total : 0;
@@ -221,10 +228,10 @@ export const getPlatformStats = async (req, res) => {
         totalRevenue,
         totalGMV,
         activeUsers: { sellers: sellerCount, lenders: lenderCount },
-        activeLoans: activeLoansCount
+        activeLoans: activeLoansCount,
       },
       actionRequired: { pendingKyc, pendingWithdrawals },
-      recentLedger
+      recentLedger,
     });
   } catch (error) {
     console.error("Admin Dashboard Stats Error:", error);
@@ -245,7 +252,7 @@ export const getAllTransactionsAdmin = async (req, res) => {
 
     res.status(200).json({
       totalTransactions: transactions.length,
-      transactions
+      transactions,
     });
   } catch (error) {
     console.error("Fetch Transactions Error:", error);
@@ -267,9 +274,9 @@ export const getAllFinancesAdmin = async (req, res) => {
 
     res.status(200).json({
       totalFinancedLoans: finances.length,
-      activeLoans: finances.filter(f => !f.isSettled).length,
-      settledLoans: finances.filter(f => f.isSettled).length,
-      finances
+      activeLoans: finances.filter((f) => !f.isSettled).length,
+      settledLoans: finances.filter((f) => f.isSettled).length,
+      finances,
     });
   } catch (error) {
     console.error("Fetch Finances Error:", error);
@@ -283,7 +290,9 @@ export const toggleUserStatus = async (req, res) => {
     const { isActive } = req.body;
 
     if (typeof isActive !== "boolean") {
-      return res.status(400).json({ error: "isActive must be a boolean value." });
+      return res
+        .status(400)
+        .json({ error: "isActive must be a boolean value." });
     }
 
     let user;
@@ -299,7 +308,7 @@ export const toggleUserStatus = async (req, res) => {
     res.status(200).json({
       success: true,
       message: `${role.toUpperCase()} account has been ${isActive ? "Re-activated" : "Suspended"}.`,
-      user: { id: user._id, email: user.email, isActive: user.isActive }
+      user: { id: user._id, email: user.email, isActive: user.isActive },
     });
   } catch (error) {
     console.error("Toggle User Status Error:", error);
@@ -319,7 +328,11 @@ export const cancelInvoiceAdmin = async (req, res) => {
     if (!invoice) return res.status(404).json({ error: "Invoice not found." });
 
     if (invoice.status === "Funded" || invoice.status === "Repaid") {
-      return res.status(400).json({ error: "Cannot cancel an invoice that is already funded or repaid." });
+      return res
+        .status(400)
+        .json({
+          error: "Cannot cancel an invoice that is already funded or repaid.",
+        });
     }
 
     invoice.status = "Cancelled";
@@ -327,13 +340,13 @@ export const cancelInvoiceAdmin = async (req, res) => {
 
     await Bid.updateMany(
       { invoice: invoice._id, status: "Pending" },
-      { $set: { status: "Rejected" } }
+      { $set: { status: "Rejected" } },
     );
 
     res.status(200).json({
       success: true,
       message: "Invoice cancelled and removed from the marketplace.",
-      reasonProvided: reason || "Admin Intervention"
+      reasonProvided: reason || "Admin Intervention",
     });
   } catch (error) {
     console.error("Cancel Invoice Error:", error);
@@ -355,7 +368,9 @@ export const verifyNOA = async (req, res) => {
 
     // ✅ FIX: The Admin must look for "Pending Admin Approval" to verify it
     if (invoice.status !== "Pending Admin Approval") {
-      return res.status(400).json({ error: "Invoice is not pending NOA review." });
+      return res
+        .status(400)
+        .json({ error: "Invoice is not pending NOA review." });
     }
 
     if (isApproved) {
@@ -368,8 +383,10 @@ export const verifyNOA = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: isApproved ? "NOA Verified. Lender can now fund." : "NOA Rejected. Seller must re-upload.",
-      status: invoice.status
+      message: isApproved
+        ? "NOA Verified. Lender can now fund."
+        : "NOA Rejected. Seller must re-upload.",
+      status: invoice.status,
     });
   } catch (error) {
     console.error("Verify NOA Error:", error);
@@ -392,7 +409,7 @@ export const getPendingNOAInvoices = async (req, res) => {
     res.status(200).json({
       success: true,
       count: invoices.length,
-      data: invoices
+      data: invoices,
     });
   } catch (error) {
     console.error("Fetch Pending NOA Error:", error);
@@ -411,43 +428,50 @@ export const processBuyerRepayment = async (req, res) => {
     const invoice = await Invoice.findById(id);
     if (!invoice) return res.status(404).json({ error: "Invoice not found." });
 
-    console.log("invoice found")
-    
+    console.log("invoice found");
+
     // 👇 ADDED: Allow 'Overdue' invoices to pass through
     if (invoice.status !== "Funded" && invoice.status !== "Overdue") {
-      return res.status(400).json({ error: "Only 'Funded' or 'Overdue' invoices can be settled." });
+      return res
+        .status(400)
+        .json({ error: "Only 'Funded' or 'Overdue' invoices can be settled." });
     }
 
     const winningBid = await Bid.findOne({ invoice: id, status: "Funded" });
-    if (!winningBid) return res.status(404).json({ error: "Winning bid not found." });
-    console.log("winning bid found")
-    
+    if (!winningBid)
+      return res.status(404).json({ error: "Winning bid not found." });
+    console.log("winning bid found");
+
     const buyerPayment = invoice.totalAmount;
     const lenderPrincipal = winningBid.loanAmount;
     const platformFee = Math.ceil(lenderPrincipal * 0.02);
-    
+
     // 👇 ADDED: Fetch penalty (will be 0 if paid on time)
     const penaltyAmount = invoice.penaltyAmount || 0;
-    
+
     // 👇 MODIFIED: Add penalty to the lender's total return
-    const lenderTotalReturn = (lenderPrincipal - platformFee) + penaltyAmount;
-    
+    const lenderTotalReturn = lenderPrincipal - platformFee + penaltyAmount;
+
     // (Your existing math here automatically deducts the penalty from the seller because lenderTotalReturn is now higher)
-    const sellerRemainingBalance = buyerPayment - lenderTotalReturn - platformFee;
-    console.log(sellerRemainingBalance)
-    
+    const sellerRemainingBalance =
+      buyerPayment - lenderTotalReturn - platformFee;
+    console.log(sellerRemainingBalance);
+
     await Lender.findByIdAndUpdate(winningBid.lender, {
-      $inc: { walletBalance: lenderTotalReturn }
+      $inc: { walletBalance: lenderTotalReturn },
     });
 
     await Seller.findByIdAndUpdate(invoice.seller, {
-      $inc: { walletBalance: sellerRemainingBalance }
+      $inc: { walletBalance: sellerRemainingBalance },
     });
 
     // 👇 ADDED: Update Admin wallet with the platform fee
-    await Admin.findOneAndUpdate({}, {
-      $inc: { walletBalance: platformFee }
-    });
+    await Admin.findOneAndUpdate(
+      {},
+      {
+        $inc: { walletBalance: platformFee },
+      },
+    );
 
     await Transaction.insertMany([
       {
@@ -456,7 +480,7 @@ export const processBuyerRepayment = async (req, res) => {
         type: "REPAYMENT_IN",
         amount: lenderTotalReturn,
         status: "SUCCESS",
-        referenceId: `SETTLE_${invoice.invoiceNumber}_LENDER`
+        referenceId: `SETTLE_${invoice.invoiceNumber}_LENDER`,
       },
       {
         userType: "Seller",
@@ -464,15 +488,15 @@ export const processBuyerRepayment = async (req, res) => {
         type: "REMAINING_BALANCE_IN",
         amount: sellerRemainingBalance,
         status: "SUCCESS",
-        referenceId: `SETTLE_${invoice.invoiceNumber}_SELLER`
+        referenceId: `SETTLE_${invoice.invoiceNumber}_SELLER`,
       },
       {
         userType: "Admin",
         type: "PLATFORM_FEE",
         amount: platformFee,
         status: "SUCCESS",
-        referenceId: `SETTLE_${invoice.invoiceNumber}_FEE`
-      }
+        referenceId: `SETTLE_${invoice.invoiceNumber}_FEE`,
+      },
     ]);
 
     invoice.status = "Repaid";
@@ -492,10 +516,9 @@ export const processBuyerRepayment = async (req, res) => {
         lenderReceived: lenderTotalReturn,
         platformFee,
         penaltyApplied: penaltyAmount, // 👇 ADDED: Expose penalty in response for UI
-        sellerReceived: sellerRemainingBalance
-      }
+        sellerReceived: sellerRemainingBalance,
+      },
     });
-
   } catch (error) {
     console.error("Settlement Engine Error:", error);
     res.status(500).json({ error: "Failed to process settlement." });
@@ -503,10 +526,10 @@ export const processBuyerRepayment = async (req, res) => {
 };
 export const triggerManualSettlement = async (req, res) => {
   try {
-      const result = await runSettlementCheck();
-      res.status(200).json({ success: true, result });
+    const result = await runSettlementCheck();
+    res.status(200).json({ success: true, result });
   } catch (error) {
-      console.error("Manual Trigger Error:", error);
-      res.status(500).json({ success: false, error: error.message });
+    console.error("Manual Trigger Error:", error);
+    res.status(500).json({ success: false, error: error.message });
   }
 };

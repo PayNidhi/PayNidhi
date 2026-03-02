@@ -7,8 +7,8 @@ import { getPendingNOAs, verifyNOA } from '../../api/adminApi';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// const API_BACKEND_URL = "http://localhost:5001"; 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+// Use the environment variable with a local fallback for development
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001";
 
 // 📄 Secure PDF Viewer Component
 const SecureAdminPdfViewer = ({ filePath }) => {
@@ -22,10 +22,14 @@ const SecureAdminPdfViewer = ({ filePath }) => {
         const fetchPdf = async () => {
             try {
                 setError(false);
+                // Normalize slashes for Windows/Linux paths
                 const normalizedPath = filePath.replace(/\\/g, "/");
+                // Ensure the path starts with a single slash
                 const cleanPath = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
                 
-                const response = await fetch(`${API_BACKEND_URL}${cleanPath}`);
+                // ✅ FIXED: Changed API_BACKEND_URL to API_BASE_URL
+                const response = await fetch(`${API_BASE_URL}${cleanPath}`);
+                
                 if (!response.ok) throw new Error("File not found");
                 
                 const blob = await response.blob();
@@ -85,6 +89,7 @@ const AdminNOAReview = () => {
         try {
             setLoading(true);
             const res = await getPendingNOAs();
+            // Assuming your backend returns { success: true, data: [...] }
             setInvoices(res.data.data || []);
         } catch (error) {
             toast.error("Failed to fetch NOA queue");
@@ -202,7 +207,6 @@ const AdminNOAReview = () => {
                                         </td>
                                         <td className="px-5 sm:px-6 py-4 sm:py-5">
                                             <div className="flex items-center justify-end gap-2">
-                                                {/* View PDF */}
                                                 <button
                                                     className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-[#0f8f79] hover:bg-[#E0F6F2] hover:border-[#7FE0CC]/50 transition-all rounded-xl border border-slate-200 bg-white shadow-sm active:scale-95"
                                                     onClick={() => setViewDocumentPath(row.noaDocumentUrl)}
@@ -211,7 +215,6 @@ const AdminNOAReview = () => {
                                                     <Eye size={14} />
                                                 </button>
                                                 
-                                                {/* Reject */}
                                                 <button 
                                                     disabled={processingId === row._id}
                                                     onClick={() => handleVerification(row._id, false)}
@@ -221,7 +224,6 @@ const AdminNOAReview = () => {
                                                     <XCircle size={14} />
                                                 </button>
 
-                                                {/* Approve */}
                                                 <button
                                                     disabled={processingId === row._id}
                                                     onClick={() => handleVerification(row._id, true)}
