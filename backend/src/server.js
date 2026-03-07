@@ -5,7 +5,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import path from "path";
 import { fileURLToPath } from "url";
-import helmet from "helmet"; // 👈 Added for security
+import helmet from "helmet"; 
 import { startCronJobs } from "./utils/settlementEngine.js";
 import connectDB from "./lib/db.js";
 
@@ -23,32 +23,40 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// 1. 🛡️ Security Headers
+// 🛡️ Security Headers
 app.use(helmet({ crossOriginResourcePolicy: false }));
 
-// 2. 🌐 Dynamic CORS Configuration
+// 🌐 Bulletproof CORS Configuration
 const allowedOrigins = [
-  "http://localhost:5173", // Local dev
-  process.env.FRONTEND_URL  // Production frontend (e.g., https://paynidhi.vercel.app)
+  "http://localhost:5173",
+  "https://pay-nidhi.vercel.app" // Hardcoded safety net
 ];
+
+// Add environment variable safely if it exists
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
 
 app.use(
   cors({
     origin: function (origin, callback) {
+      // !origin allows server-to-server requests (like Postman or mobile apps)
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
+        console.error(`❌ CORS blocked request from origin: ${origin}`);
         callback(new Error("CORS policy blocked this request"));
       }
     },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   })
 );
 
 app.use(express.json());
 app.use(cookieParser());
 
-// Serve uploaded files (PDFs/Images)
+// Serve uploaded files
 app.use("/api/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 // API routes
