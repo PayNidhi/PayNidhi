@@ -11,8 +11,8 @@ const API_URL = process.env.NODE_ENV === "production"
 // ✅ FIX 1: Port 465 and secure: true (Bypasses Render SMTP Timeouts)
 export const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
+  port: 465, // MUST be 465 for Render
+  secure: true, // MUST be true for port 465
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_APP_PASS,

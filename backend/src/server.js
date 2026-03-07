@@ -5,7 +5,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import path from "path";
 import { fileURLToPath } from "url";
-import helmet from "helmet"; 
+import helmet from "helmet";
 import { startCronJobs } from "./utils/settlementEngine.js";
 import connectDB from "./lib/db.js";
 
@@ -23,35 +23,12 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// 🛡️ Security Headers
 app.use(helmet({ crossOriginResourcePolicy: false }));
 
-// 🌐 Bulletproof CORS Configuration
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://pay-nidhi.vercel.app" // Hardcoded safety net
-];
-
-// Add environment variable safely if it exists
-if (process.env.FRONTEND_URL) {
-  allowedOrigins.push(process.env.FRONTEND_URL);
-}
-
-// 🌐 Bulletproof CORS Configuration
+// Fixed CORS to be compatible with Vercel Production
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // 1. Allow local development
-      // 2. Allow any URL that ends in .vercel.app
-      if (!origin || 
-          origin === "http://localhost:5173" || 
-          origin.endsWith(".vercel.app")) {
-        callback(null, true);
-      } else {
-        console.error(`❌ CORS blocked request from origin: ${origin}`);
-        callback(new Error("CORS policy blocked this request"));
-      }
-    },
+    origin: ["http://localhost:5173", "https://pay-nidhi.vercel.app"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   })
@@ -60,10 +37,8 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-// Serve uploaded files
 app.use("/api/uploads", express.static(path.join(process.cwd(), "uploads")));
 
-// API routes
 app.use("/api/admin", adminRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/invoice", invoiceRoutes);
