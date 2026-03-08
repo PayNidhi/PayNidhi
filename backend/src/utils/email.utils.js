@@ -1,16 +1,18 @@
+// backend/src/utils/email.utils.js
 import dotenv from "dotenv";
 dotenv.config();
 
-// Helper to handle the API request
+// Helper to handle the Brevo API request
 const sendViaBrevo = async (to, subject, htmlContent) => {
   const response = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
     headers: {
-      "api-key": process.env.BREVO_API_KEY, // Ensure this exists in your .env
+      "api-key": process.env.BREVO_API_KEY, // Make sure this is in your Render Environment
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      sender: { name: "PayNidhi Security", email: process.env.GMAIL_USER },
+      // The email here MUST be the one you verified in your Brevo account
+      sender: { name: "PayNidhi Security", email: process.env.GMAIL_USER }, 
       to: [{ email: to }],
       subject: subject,
       htmlContent: htmlContent,
@@ -22,37 +24,142 @@ const sendViaBrevo = async (to, subject, htmlContent) => {
     console.error("Brevo API Error:", errorData);
     throw new Error("Failed to send email via Brevo");
   }
-  console.log(`✅ Email sent successfully to: ${to}`);
+  console.log(`✅ Email sent successfully via Brevo to: ${to}`);
 };
 
-// Functions remain identical to your old ones to ensure compatibility
 export const sendOtpEmail = async ({ to, code }) => {
+  // Your exact UI for the OTP Email
   const html = `
-    <div style="font-family: 'Segoe UI', sans-serif; padding: 40px 20px; background-color: #f3f4f6;">
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px 20px; background-color: #f3f4f6;">
       <div style="max-width: 480px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; padding: 40px 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
-        <h1 style="color: #111827; font-size: 24px; font-weight: 700; text-align: center;">Verify your identity</h1>
-        <p style="text-align: center; margin: 20px 0;">Your verification code is:</p>
-        <div style="text-align: center; font-size: 36px; font-weight: bold; color: #10b981;">${code}</div>
+        
+        <div style="text-align: center; margin-bottom: 24px;">
+          <div style="display: inline-block; width: 50px; height: 50px; background-color: #d1fae5; color: #059669; border-radius: 12px; font-size: 20px; font-weight: bold; line-height: 50px; margin-bottom: 12px;">
+            PN
+          </div>
+          <div style="color: #10b981; font-weight: 700; font-size: 14px; letter-spacing: 1px; text-transform: uppercase;">
+            PayNidhi Security
+          </div>
+        </div>
+
+        <h1 style="color: #111827; font-size: 24px; font-weight: 700; text-align: center; margin: 0 0 16px;">
+          Verify your identity
+        </h1>
+        
+        <p style="color: #4b5563; font-size: 15px; text-align: center; margin: 0 0 32px; line-height: 1.6;">
+          Please enter the verification code below to securely access your account. This code will expire in 5 minutes.
+        </p>
+
+        <div style="text-align: center; margin-bottom: 32px;">
+          <div style="display: inline-block; background-color: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; font-size: 36px; font-weight: 800; letter-spacing: 12px; padding: 16px 32px; border-radius: 8px;">
+            ${code}
+          </div>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid #f3f4f6; margin: 0 0 24px;" />
+
+        <p style="color: #9ca3af; font-size: 12px; text-align: center; margin: 0 0 8px; line-height: 1.5;">
+          If you didn't request this code, you can safely ignore this email.
+        </p>
+        <p style="color: #9ca3af; font-size: 12px; text-align: center; margin: 0;">
+          &copy; ${new Date().getFullYear()} PayNidhi. All rights reserved.
+        </p>
+        
       </div>
     </div>
   `;
-  await sendViaBrevo(to, "Your PayNidhi verification code", html);
+
+  try {
+    await sendViaBrevo(to, "Your PayNidhi verification code", html);
+  } catch (error) {
+    console.error("❌ Failed to send OTP Email:", error);
+    throw error; // Throwing so the controller knows it failed
+  }
 };
+
 
 export const sendInvoiceVerificationMailToBuyer = async ({ to, token, invoice, seller }) => {
   const baseUrl = process.env.BACKEND_URL || "http://localhost:5001";
   
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  // Your exact UI for the Invoice Verification Email
   const html = `
-    <div style="font-family: system-ui, sans-serif; padding: 40px; background-color: #f8fafc;">
-      <div style="max-width: 500px; margin: 0 auto; background-color: #ffffff; padding: 32px; border-radius: 16px;">
-        <h1 style="font-size: 20px;">Action Required: Verify Invoice</h1>
-        <p>Your vendor, <strong>${seller?.companyName}</strong>, has uploaded an invoice.</p>
-        <a href="${baseUrl}/api/invoice/verify-invoice?token=${token}&verify=true" 
-           style="display: block; padding: 14px; background-color: #10b981; color: white; text-align: center; text-decoration: none; border-radius: 8px;">
-          Confirm & Verify Invoice
-        </a>
+    <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 40px 20px; background-color: #f8fafc; color: #334155;">
+      <div style="max-width: 500px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); border: 1px solid #e2e8f0;">
+        
+        <div style="padding: 24px; border-bottom: 1px solid #e2e8f0; text-align: center; background-color: #f8fafc;">
+          <h2 style="margin: 0; font-size: 24px; color: #0f8f79; font-weight: 800; letter-spacing: -0.5px;">PayNidhi</h2>
+          <p style="margin: 4px 0 0; font-size: 13px; color: #64748b; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;">Escrow Verification</p>
+        </div>
+
+        <div style="padding: 32px 24px;">
+          <h1 style="font-size: 20px; color: #0f172a; margin: 0 0 16px; font-weight: 700;">Action Required: Verify Invoice</h1>
+          <p style="font-size: 15px; color: #475569; margin: 0 0 24px; line-height: 1.6;">
+            Your vendor, <strong>${seller?.companyName || "your vendor"}</strong>, has uploaded an invoice to the PayNidhi platform for discounting. Please confirm that the goods/services have been received and this invoice is valid.
+          </p>
+
+          <div style="background-color: #f1f5f9; border-radius: 12px; padding: 20px; margin-bottom: 32px; border: 1px solid #e2e8f0;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+              <tr>
+                <td style="padding: 0 0 12px; color: #64748b;">Invoice Number</td>
+                <td style="padding: 0 0 12px; color: #0f172a; text-align: right; font-weight: 600;">${invoice?.invoiceNumber || "N/A"}</td>
+              </tr>
+              <tr>
+                <td style="padding: 0 0 12px; color: #64748b;">Invoice Date</td>
+                <td style="padding: 0 0 12px; color: #0f172a; text-align: right; font-weight: 600;">${invoice?.createdAt ? new Date(invoice.createdAt).toLocaleDateString() : "N/A"}</td>
+              </tr>
+              <tr>
+                <td style="padding: 0 0 12px; color: #64748b;">Due Date</td>
+                <td style="padding: 0 0 12px; color: #0f172a; text-align: right; font-weight: 600;">${invoice?.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : "N/A"}</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px 0 0; border-top: 1px dashed #cbd5e1; color: #64748b; font-weight: 500;">Total Amount</td>
+                <td style="padding: 12px 0 0; border-top: 1px dashed #cbd5e1; color: #0f8f79; text-align: right; font-size: 18px; font-weight: 700;">${invoice?.totalAmount ? formatCurrency(invoice.totalAmount) : "₹0"}</td>
+              </tr>
+            </table>
+          </div>
+
+          <div style="text-align: center;">
+            <a href="${baseUrl}/api/invoice/verify-invoice?token=${token}&verify=true" 
+               style="display: block; width: 100%; padding: 14px 0; background-color: #10b981; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; margin-bottom: 12px; text-align: center;">
+              Confirm & Verify Invoice
+            </a>
+            
+            <a href="${baseUrl}/api/invoice/verify-invoice?token=${token}&verify=false" 
+               style="display: block; width: 100%; padding: 14px 0; background-color: #ffffff; color: #ef4444; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; border: 1px solid #fca5a5; text-align: center;">
+              Reject / Report Issue
+            </a>
+          </div>
+        </div>
+
+        <div style="padding: 24px; background-color: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center;">
+          <p style="font-size: 12px; color: #64748b; margin: 0 0 8px; line-height: 1.5;">
+            If you did not expect this email, please contact your vendor immediately or click reject.
+          </p>
+          <p style="font-size: 12px; color: #94a3b8; margin: 0;">
+            © ${new Date().getFullYear()} PayNidhi Escrow Services
+          </p>
+        </div>
+        
       </div>
     </div>
   `;
-  await sendViaBrevo(to, `Verify Invoice #${invoice?.invoiceNumber}`, html);
+
+  try {
+    await sendViaBrevo(
+      to, 
+      `Action Required: Verify Invoice #${invoice?.invoiceNumber} from ${seller?.companyName}`, 
+      html
+    );
+    console.log("final confirmation token: ", token);
+  } catch (error) {
+    console.error("❌ Failed to send Invoice Mail:", error);
+  }
 };
