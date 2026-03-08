@@ -20,22 +20,6 @@ const transporter = nodemailer.createTransport({
   tls: {
     rejectUnauthorized: false 
   }
-});const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true, 
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASS,
-  },
-  debug: true, // 👈 Add this to see details in Render logs
-  logger: true, // 👈 Add this
-  connectionTimeout: 10000, // 10 seconds
-  greetingTimeout: 10000,
-  tls: {
-    rejectUnauthorized: false 
-  }
 });
 
 export const sendOtpEmail = async ({ to, code }) => {
