@@ -79,7 +79,7 @@ export const sendOtpEmail = async ({ to, code }) => {
 
 
 export const sendInvoiceVerificationMailToBuyer = async ({ to, token, invoice, seller }) => {
-  const baseUrl = process.env.BACKEND_URL || "http://localhost:5001";
+  const baseUrl = process.env.FRONTEND_URL || "http://localhost:5001";
   
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-IN", {
