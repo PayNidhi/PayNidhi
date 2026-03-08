@@ -2,17 +2,18 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-// Helper to handle the Brevo API request
+// ==========================================
+// 1. BREVO API HELPER (Replaces Nodemailer completely)
+// ==========================================
 const sendViaBrevo = async (to, subject, htmlContent) => {
   const response = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
     headers: {
-      "api-key": process.env.BREVO_API_KEY, // Make sure this is in your Render Environment
+      "api-key": process.env.BREVO_API_KEY, 
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      // The email here MUST be the one you verified in your Brevo account
-      sender: { name: "PayNidhi Security", email: process.env.GMAIL_USER }, 
+      sender: { name: "PayNidhi Security", email: process.env.GMAIL_USER }, // Make sure this email is verified in Brevo!
       to: [{ email: to }],
       subject: subject,
       htmlContent: htmlContent,
@@ -21,14 +22,16 @@ const sendViaBrevo = async (to, subject, htmlContent) => {
 
   if (!response.ok) {
     const errorData = await response.text();
-    console.error("Brevo API Error:", errorData);
+    console.error("❌ Brevo API Error:", errorData);
     throw new Error("Failed to send email via Brevo");
   }
   console.log(`✅ Email sent successfully via Brevo to: ${to}`);
 };
 
+// ==========================================
+// 2. SEND OTP EMAIL (With your exact accurate UI)
+// ==========================================
 export const sendOtpEmail = async ({ to, code }) => {
-  // Your exact UI for the OTP Email
   const html = `
     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px 20px; background-color: #f3f4f6;">
       <div style="max-width: 480px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; padding: 40px 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
@@ -73,13 +76,20 @@ export const sendOtpEmail = async ({ to, code }) => {
     await sendViaBrevo(to, "Your PayNidhi verification code", html);
   } catch (error) {
     console.error("❌ Failed to send OTP Email:", error);
-    throw error; // Throwing so the controller knows it failed
+    throw error;
   }
 };
 
-
+// ==========================================
+// 3. SEND INVOICE VERIFICATION (With Smart Local/Prod Links)
+// ==========================================
 export const sendInvoiceVerificationMailToBuyer = async ({ to, token, invoice, seller }) => {
-  const baseUrl = process.env.FRONTEND_URL || "http://localhost:5001";
+  
+  // 🔥 SMART LINK TOGGLE: Automatically uses Localhost OR Render URL
+  const isProduction = process.env.NODE_ENV === "production";
+  const baseUrl = isProduction 
+    ? "https://paynidhi-backend.onrender.com" 
+    : "http://localhost:5001";
   
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-IN", {
@@ -89,7 +99,6 @@ export const sendInvoiceVerificationMailToBuyer = async ({ to, token, invoice, s
     }).format(amount);
   };
 
-  // Your exact UI for the Invoice Verification Email
   const html = `
     <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 40px 20px; background-color: #f8fafc; color: #334155;">
       <div style="max-width: 500px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); border: 1px solid #e2e8f0;">
@@ -158,8 +167,8 @@ export const sendInvoiceVerificationMailToBuyer = async ({ to, token, invoice, s
       `Action Required: Verify Invoice #${invoice?.invoiceNumber} from ${seller?.companyName}`, 
       html
     );
-    console.log("final confirmation token: ", token);
+    console.log("✅ Invoice verification email sent. Token:", token);
   } catch (error) {
-    console.error("❌ Failed to send Invoice Mail:", error);
+    console.error("❌ Failed to send Invoice verification Mail:", error);
   }
 };
