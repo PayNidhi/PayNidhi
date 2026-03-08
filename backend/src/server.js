@@ -26,7 +26,7 @@ const app = express();
 // Add your production frontend URL to this array
 const allowedOrigins = [
   "http://localhost:5173", 
-  "https://your-production-frontend.vercel.app" // 👈 REPLACE THIS with your real frontend URL
+  "https://pay-nidhi.vercel.app" // 👈 REPLACE THIS with your real frontend URL
 ];
 
 app.use(
