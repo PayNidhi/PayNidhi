@@ -3,17 +3,16 @@ import dotenv from "dotenv";
 dotenv.config();
 import nodemailer from "nodemailer";
 
+// 🔥 FIX 1: Forced port 465 and secure: true to bypass cloud firewalls blocking port 587
 export const transporter = nodemailer.createTransport({
-  service: "gmail",
   host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
+  port: 465,
+  secure: true, 
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_APP_PASS,
   },
 });
-
 
 export const sendOtpEmail = async ({ to, code }) => {
   const html = `
@@ -65,8 +64,9 @@ export const sendOtpEmail = async ({ to, code }) => {
 };
 
 
-// THE FIX: Added 'invoice' and 'seller' to the destructured parameters!
 export const sendInvoiceVerificationMailToBuyer = async ({ to, token, invoice, seller }) => {
+  // 🔥 FIX 2: Dynamic URL for production vs local
+  const baseUrl = process.env.BACKEND_URL || "http://localhost:5001";
   
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-IN", {
@@ -113,12 +113,12 @@ export const sendInvoiceVerificationMailToBuyer = async ({ to, token, invoice, s
           </div>
 
           <div style="text-align: center;">
-            <a href="http://localhost:5001/api/invoice/verify-invoice?token=${token}&verify=true" 
+            <a href="${baseUrl}/api/invoice/verify-invoice?token=${token}&verify=true" 
                style="display: block; width: 100%; padding: 14px 0; background-color: #10b981; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; margin-bottom: 12px; text-align: center;">
               Confirm & Verify Invoice
             </a>
             
-            <a href="http://localhost:5001/api/invoice/verify-invoice?token=${token}&verify=false" 
+            <a href="${baseUrl}/api/invoice/verify-invoice?token=${token}&verify=false" 
                style="display: block; width: 100%; padding: 14px 0; background-color: #ffffff; color: #ef4444; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; border: 1px solid #fca5a5; text-align: center;">
               Reject / Report Issue
             </a>
@@ -141,7 +141,6 @@ export const sendInvoiceVerificationMailToBuyer = async ({ to, token, invoice, s
   await transporter.sendMail({
     from: `"PayNidhi Security" <${process.env.GMAIL_USER}>`,
     to,
-    // THE FIX 2: A much more professional, dynamic subject line
     subject: `Action Required: Verify Invoice #${invoice?.invoiceNumber} from ${seller?.companyName}`,
     html,
   });
